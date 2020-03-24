@@ -1,0 +1,19 @@
+fun method() {
+  return "string"
+}
+
+/** This is a class */
+class A {
+  method() {
+    var a = 1 + 2
+  }
+}
+
+/**
+ * blah
+ *
+ */
+var b = 123.45
+var c = "c"
+
+(){()}!=

@@ -1,4 +1,4 @@
-name := "parquet-vectorized"
+name := "lox"
 
 organization := "com.github.sadikovi"
 

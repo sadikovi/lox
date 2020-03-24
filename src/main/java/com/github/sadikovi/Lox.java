@@ -47,19 +47,18 @@ public class Lox {
   /** Runs command */
   private static void run(String command) {
     Scanner scanner = new Scanner(command);
-    List<String> tokens = scanner.scanTokens();
-
-    for (String token : tokens) {
+    List<Token> tokens = scanner.getTokens();
+    for (Token token : tokens) {
       System.out.print("[" + token + "] ");
     }
     System.out.println();
   }
 
-  private static void error(int line, String message) {
+  static void error(int line, String message) {
     report(line, "", message);
   }
 
-  private static void report(int line, String where, String message) {
+  static void report(int line, String where, String message) {
     System.err.println("[line " + line + "] Error" + where + ": " + message);
     hadError = true;
   }
