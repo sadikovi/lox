@@ -18,12 +18,22 @@ import static com.github.sadikovi.TokenType.*;
  *                | "(" expression ")" ;
  */
 class Parser {
+  public static class ParseError extends RuntimeException { }
+
   private final List<Token> tokens;
   private int current;
 
   Parser(List<Token> tokens) {
     this.tokens = tokens;
     this.current = 0;
+  }
+
+  public Expr parse() {
+    try {
+      return expression();
+    } catch (ParseError err) {
+      return null;
+    }
   }
 
   /** Returns false if there are no tokens left or we have reached the end */
@@ -55,6 +65,33 @@ class Parser {
     Token op = peek();
     advance();
     return op;
+  }
+
+  /** Synchronize parser after an error */
+  private void synchronize() {
+    while (!isAtEnd()) {
+      switch (peek().type) {
+        case SEMICOLON:
+          advance();
+          return;
+        case CLASS:
+        case FUN:
+        case VAR:
+        case FOR:
+        case IF:
+        case WHILE:
+        case PRINT:
+        case RETURN:
+          return;
+      }
+      advance();
+    }
+  }
+
+  /** Throws a parsing error */
+  private ParseError error(Token token, String message) {
+    Lox.report(token, message);
+    throw new ParseError();
   }
 
   private Expr expression() {
@@ -114,7 +151,8 @@ class Parser {
 
   private Expr unary() {
     // ( "!" | "-" ) unary | primary
-    if (check(BANG, MINUS)) {
+    // also support "+123"
+    if (check(BANG, MINUS, PLUS)) {
       Token op = peekAndAdvance();
       return new Expr.Unary(op, unary());
     } else {
@@ -147,8 +185,12 @@ class Parser {
       if (check(RIGHT_PAREN)) {
         advance();
         return new Expr.Grouping(expression());
+      } else {
+        Token token = peek();
+        advance();
+        throw error(token, "Expected ')' after expression");
       }
     }
-    throw new RuntimeException("Failed to parse primary expression");
+    throw error(peek(), "Expect expression");
   }
 }

@@ -48,10 +48,22 @@ public class Lox {
   private static void run(String command) {
     Scanner scanner = new Scanner(command);
     List<Token> tokens = scanner.getTokens();
+
+    System.out.println("== Tokens ==");
     for (Token token : tokens) {
       System.out.print("[" + token + "] ");
     }
     System.out.println();
+
+    System.out.println("== AST ==");
+
+    Parser parser = new Parser(tokens);
+    Expr expression = parser.parse();
+
+    if (hadError) return;
+
+    // If the tree was correct, print the expression
+    System.out.println(new AstPrinter().print(expression));
   }
 
   static void error(int line, String message) {
@@ -61,5 +73,13 @@ public class Lox {
   static void report(int line, String where, String message) {
     System.err.println("[line " + line + "] Error" + where + ": " + message);
     hadError = true;
+  }
+
+  static void report(Token token, String message) {
+    if (token.type == TokenType.EOF) {
+      report(token.line, " at the end", message);
+    } else {
+      report(token.line, " at '" + token.lexeme + "'", message);
+    }
   }
 }

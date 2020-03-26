@@ -5,9 +5,9 @@ package com.github.sadikovi;
  */
 abstract class Expr {
   static class Binary extends Expr {
-    private final Expr left;
-    private final Token operator;
-    private final Expr right;
+    final Expr left;
+    final Token operator;
+    final Expr right;
 
     Binary(Expr left, Token operator, Expr right) {
       this.left = left;
@@ -22,7 +22,7 @@ abstract class Expr {
   }
 
   static class Grouping extends Expr {
-    private final Expr expression;
+    final Expr expression;
 
     Grouping(Expr expression) {
       this.expression = expression;
@@ -35,7 +35,7 @@ abstract class Expr {
   }
 
   static class Literal extends Expr {
-    private final Object value;
+    final Object value;
 
     Literal(Object value) {
       this.value = value;
@@ -48,8 +48,8 @@ abstract class Expr {
   }
 
   static class Unary extends Expr {
-    private final Token operator;
-    private final Expr right;
+    final Token operator;
+    final Expr right;
 
     Unary(Token operator, Expr right) {
       this.operator = operator;
