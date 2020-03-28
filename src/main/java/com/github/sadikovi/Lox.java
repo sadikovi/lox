@@ -58,26 +58,26 @@ public class Lox {
     Scanner scanner = new Scanner(command);
     List<Token> tokens = scanner.getTokens();
 
-    System.out.println("== Tokens ==");
+    System.out.println("\n== Tokens ==");
     for (Token token : tokens) {
       System.out.print("[" + token + "] ");
     }
     System.out.println();
 
-    System.out.println("== AST ==");
+    System.out.println("\n== AST ==");
 
     Parser parser = new Parser(tokens);
-    Expr expression = parser.parse();
+    List<Stmt> statements = parser.parse();
 
     if (hadError) return;
 
     // If the tree was correct, print the expression
-    System.out.println(new AstPrinter().print(expression));
+    System.out.println(new AstPrinter().print(statements));
 
     System.out.println("== Eval ==");
 
-    // Evaluate expression
-    interpreter.interpret(expression);
+    // Evaluate statements
+    interpreter.interpret(statements);
   }
 
   static void error(int line, String message) {

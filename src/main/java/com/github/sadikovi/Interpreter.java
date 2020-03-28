@@ -1,18 +1,34 @@
 package com.github.sadikovi;
 
+import java.util.List;
+
 import com.github.sadikovi.TokenType.*;
 
 /**
  * Evaluates expressions.
  */
-class Interpreter implements Expr.Visitor<Object> {
-  public void interpret(Expr expr) {
+class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+  public void interpret(List<Stmt> statements) {
     try {
-      Object value = expr.accept(this);
-      System.out.println(stringify(value));
+      for (Stmt statement : statements) {
+        statement.accept(this);
+      }
     } catch (RuntimeError error) {
       Lox.runtimeError(error);
     }
+  }
+
+  @Override
+  public Void visit(Stmt.Expression stmt) {
+    stmt.expression.accept(this);
+    return null;
+  }
+
+  @Override
+  public Void visit(Stmt.Print stmt) {
+    Object value = stmt.expression.accept(this);
+    System.out.println(stringify(value));
+    return null;
   }
 
   @Override

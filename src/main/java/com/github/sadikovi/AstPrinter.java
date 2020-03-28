@@ -1,11 +1,29 @@
 package com.github.sadikovi;
 
+import java.util.List;
+
 /**
  * AST printer.
  */
-class AstPrinter implements Expr.Visitor<String> {
-  public String print(Expr expression) {
-    return expression.accept(this);
+class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
+  public String print(List<Stmt> statements) {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < statements.size(); i++) {
+      sb.append("[" + (i + 1) + "]: ");
+      sb.append(statements.get(i).accept(this));
+      sb.append("\n");
+    }
+    return sb.toString();
+  }
+
+  @Override
+  public String visit(Stmt.Expression stmt) {
+    return stmt.expression.accept(this) + ";";
+  }
+
+  @Override
+  public String visit(Stmt.Print stmt) {
+    return "print " + stmt.expression.accept(this) + ";";
   }
 
   @Override

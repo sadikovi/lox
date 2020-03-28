@@ -1,11 +1,18 @@
 package com.github.sadikovi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.github.sadikovi.TokenType.*;
 
 /**
  * Parser for Lox grammar.
+ *
+ * program   -> statement* EOF ;
+ * statement -> exprStmt
+ *            | printStmt ;
+ * exprStmt  -> expression ";" ;
+ * printStmt -> "print" expression ";" ;
  *
  * expression     -> equality ;
  * equality       -> comparison ( ( "!=" | "==" ) comparison )* ;
@@ -28,9 +35,13 @@ class Parser {
     this.current = 0;
   }
 
-  public Expr parse() {
+  public List<Stmt> parse() {
     try {
-      return expression();
+      List<Stmt> statements = new ArrayList<Stmt>();
+      while (!isAtEnd()) {
+        statements.add(statement());
+      }
+      return statements;
     } catch (ParseError err) {
       return null;
     }
@@ -92,6 +103,28 @@ class Parser {
   private ParseError error(Token token, String message) {
     Lox.report(token, message);
     throw new ParseError();
+  }
+
+  private Stmt statement() {
+    if (check(PRINT)) {
+      advance();
+      return printStatement();
+    }
+    return expressionStatement();
+  }
+
+  private Stmt printStatement() {
+    Expr expr = expression();
+    if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after expression");
+    advance();
+    return new Stmt.Print(expr);
+  }
+
+  private Stmt expressionStatement() {
+    Expr expr = expression();
+    if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after expression");
+    advance();
+    return new Stmt.Expression(expr);
   }
 
   private Expr expression() {
