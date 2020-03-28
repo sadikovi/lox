@@ -12,7 +12,9 @@ import java.util.List;
  * Lox programming language entry point.
  */
 public class Lox {
-  private static boolean hadError;
+  private static Interpreter interpreter = new Interpreter();
+  private static boolean hadError = false;
+  private static boolean hadRuntimeError = false;
 
   public static void main(String[] args) throws IOException {
     if (args.length > 1) {
@@ -30,6 +32,7 @@ public class Lox {
     byte[] bytes = Files.readAllBytes(Paths.get(path));
     run(new String(bytes, Charset.defaultCharset()));
     if (hadError) System.exit(64);
+    if (hadRuntimeError) System.exit(70);
   }
 
   /** Runs REPL */
@@ -38,9 +41,15 @@ public class Lox {
     BufferedReader reader = new BufferedReader(input);
 
     while (true) {
-      System.out.print("> ");
-      run(reader.readLine());
-      hadError = false;
+      try {
+        System.out.print("> ");
+        run(reader.readLine());
+        hadError = false;
+      } catch (Exception err) {
+        // Exit on Ctrl-D
+        error(-1, err.toString());
+        break;
+      }
     }
   }
 
@@ -64,10 +73,20 @@ public class Lox {
 
     // If the tree was correct, print the expression
     System.out.println(new AstPrinter().print(expression));
+
+    System.out.println("== Eval ==");
+
+    // Evaluate expression
+    interpreter.interpret(expression);
   }
 
   static void error(int line, String message) {
     report(line, "", message);
+  }
+
+  static void runtimeError(RuntimeError error) {
+    System.err.println(error.getMessage() + "\n[line " + error.token.line + "]");
+    hadRuntimeError = true;
   }
 
   static void report(int line, String where, String message) {

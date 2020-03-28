@@ -184,13 +184,13 @@ class Parser {
       Expr expr = expression();
       if (check(RIGHT_PAREN)) {
         advance();
-        return new Expr.Grouping(expression());
+        return new Expr.Grouping(expr);
       } else {
         Token token = peek();
         advance();
         throw error(token, "Expected ')' after expression");
       }
     }
-    throw error(peek(), "Expect expression");
+    throw error(peek(), "Expected expression");
   }
 }
