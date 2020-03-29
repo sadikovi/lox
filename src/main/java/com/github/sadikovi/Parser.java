@@ -8,14 +8,16 @@ import static com.github.sadikovi.TokenType.*;
 /**
  * Parser for Lox grammar.
  *
- * program        -> statement* EOF ;
+ * program        -> declaration* EOF ;
  * declaration    -> varDecl
  *                | statement ;
  * varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
  * statement      -> exprStmt
- *                | printStmt ;
+ *                | printStmt
+ *                | block ;
  * exprStmt       -> expression ";" ;
  * printStmt      -> "print" expression ";" ;
+ * block          -> "{" declaration* "}" ;
  *
  * expression     -> assignment ;
  * assignment     -> IDENTIFIER "=" assignment
@@ -138,6 +140,10 @@ class Parser {
       advance();
       return printStatement();
     }
+    if (check(LEFT_BRACE)) {
+      advance();
+      return block();
+    }
     return expressionStatement();
   }
 
@@ -153,6 +159,16 @@ class Parser {
     if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after expression");
     advance();
     return new Stmt.Expression(expr);
+  }
+
+  private Stmt block() {
+    List<Stmt> statements = new ArrayList<Stmt>();
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      statements.add(declaration());
+    }
+    if (!check(RIGHT_BRACE)) throw error(peek(), "Expected '}' after block");
+    advance();
+    return new Stmt.Block(statements);
   }
 
   private Expr expression() {

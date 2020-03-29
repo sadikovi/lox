@@ -9,10 +9,25 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   public String print(List<Stmt> statements) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < statements.size(); i++) {
-      sb.append("[" + (i + 1) + "]: ");
+      sb.append("[" + (i + 1) + "]: \n");
       sb.append(statements.get(i).accept(this));
       sb.append("\n");
     }
+    return sb.toString();
+  }
+
+  @Override
+  public String visit(Stmt.Block stmt) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("{\n");
+    for (int i = 0; i < stmt.statements.size(); i++) {
+      String[] enclosed = stmt.statements.get(i).accept(this).split("\n");
+      for (String line : enclosed) {
+        sb.append(" " + line);
+        sb.append("\n");
+      }
+    }
+    sb.append("}");
     return sb.toString();
   }
 

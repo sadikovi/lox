@@ -1,9 +1,24 @@
 package com.github.sadikovi;
 
+import java.util.List;
+
 /**
  * Statement.
  */
 abstract class Stmt {
+  static class Block extends Stmt {
+    final List<Stmt> statements;
+
+    Block(List<Stmt> statements) {
+      this.statements = statements;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Expression extends Stmt {
     final Expr expression;
 
@@ -49,6 +64,7 @@ abstract class Stmt {
 
   /** Visitor to traverse statements */
   interface Visitor<R> {
+    R visit(Block stmt);
     R visit(Expression stmt);
     R visit(Print stmt);
     R visit(Var stmt);

@@ -8,7 +8,8 @@ import com.github.sadikovi.TokenType.*;
  * Evaluates expressions.
  */
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-  private final Environment env = new Environment();
+  // Represents the current environment (global or for a current block)
+  private Environment env = new Environment();
 
   public void interpret(List<Stmt> statements) {
     try {
@@ -18,6 +19,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     } catch (RuntimeError error) {
       Lox.runtimeError(error);
     }
+  }
+
+  @Override
+  public Void visit(Stmt.Block stmt) {
+    Environment parent = env;
+    env = new Environment(parent);
+    try {
+      for (Stmt statement : stmt.statements) {
+        statement.accept(this);
+      }
+    } finally {
+      env = parent;
+    }
+    return null;
   }
 
   @Override
