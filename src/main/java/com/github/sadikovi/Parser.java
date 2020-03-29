@@ -129,9 +129,9 @@ class Parser {
     if (check(EQUAL)) {
       advance();
       expression = expression();
-      if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after expression");
-      advance();
     }
+    if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after expression");
+    advance();
     return new Stmt.Var(name, expression);
   }
 

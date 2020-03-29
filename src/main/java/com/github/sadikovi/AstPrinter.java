@@ -43,7 +43,13 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
   @Override
   public String visit(Stmt.Var stmt) {
-    return "var " + stmt.name.lexeme + " = " + stmt.expression.accept(this) + ";";
+    StringBuilder sb = new StringBuilder();
+    sb.append("var " + stmt.name.lexeme);
+    if (stmt.expression != null) {
+      sb.append(" = " + stmt.expression.accept(this));
+    }
+    sb.append(";");
+    return sb.toString();
   }
 
   @Override
