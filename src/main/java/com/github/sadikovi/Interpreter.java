@@ -50,11 +50,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visit(Stmt.Var stmt) {
-    Object value = null;
     if (stmt.expression != null) {
-      value = eval(stmt.expression);
+      env.define(stmt.name.lexeme, eval(stmt.expression));
+    } else {
+      env.define(stmt.name.lexeme);
     }
-    env.define(stmt.name.lexeme, value);
     return null;
   }
 

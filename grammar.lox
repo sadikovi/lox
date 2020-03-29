@@ -17,3 +17,15 @@ var c = "global c";
 print a;
 print b;
 print c;
+
+// No initializers.
+var a;
+var b = 1;
+var c = nil;
+
+a = "assigned";
+print a; // OK, was assigned first.
+
+print b; // Error!
+
+print c;

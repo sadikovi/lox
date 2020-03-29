@@ -7,6 +7,9 @@ import java.util.Map;
  * Interpreter environment.
  */
 class Environment {
+  // Sentinel value to mark variables as uninitialised
+  private static final Object NO_INIT = new Object();
+
   private final Environment enclosing; // parent environment
   private final Map<String, Object> values = new HashMap<String, Object>();
 
@@ -26,11 +29,21 @@ class Environment {
   }
 
   /**
+   * Defines new variable without initialising:
+   * var a;
+   */
+  public void define(String name) {
+    values.put(name, NO_INIT);
+  }
+
+  /**
    * Returns value for a defined variable or throws a runtime error.
    */
   public Object get(Token name) {
     if (values.containsKey(name.lexeme)) {
-      return values.get(name.lexeme);
+      Object value = values.get(name.lexeme);
+      if (value != NO_INIT) return value;
+      throw new RuntimeError(name, "Variable '" + name.lexeme + "' is not initialised");
     }
     if (enclosing != null) {
       return enclosing.get(name); // recursive solution is slow, this will be optimised in clox!
