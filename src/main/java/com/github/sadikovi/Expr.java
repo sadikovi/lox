@@ -75,6 +75,21 @@ abstract class Expr {
     }
   }
 
+  static class Assign extends Expr {
+    final Token name;
+    final Expr expression;
+
+    Assign(Token name, Expr expression) {
+      this.name = name;
+      this.expression = expression;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   public abstract <R> R accept(Visitor<R> visitor);
 
   /**
@@ -86,5 +101,6 @@ abstract class Expr {
     R visit(Literal expr);
     R visit(Unary expr);
     R visit(Variable expr);
+    R visit(Assign expr);
   }
 }

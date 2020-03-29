@@ -22,13 +22,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visit(Stmt.Expression stmt) {
-    stmt.expression.accept(this);
+    eval(stmt.expression);
     return null;
   }
 
   @Override
   public Void visit(Stmt.Print stmt) {
-    Object value = stmt.expression.accept(this);
+    Object value = eval(stmt.expression);
     System.out.println(stringify(value));
     return null;
   }
@@ -37,7 +37,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Void visit(Stmt.Var stmt) {
     Object value = null;
     if (stmt.expression != null) {
-      value = stmt.expression.accept(this);
+      value = eval(stmt.expression);
     }
     env.define(stmt.name.lexeme, value);
     return null;
@@ -130,6 +130,13 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visit(Expr.Variable expr) {
     return env.get(expr.name);
+  }
+
+  @Override
+  public Object visit(Expr.Assign expr) {
+    Object value = eval(expr.expression);
+    env.assign(expr.name, value);
+    return value;
   }
 
   /** Evaluates expression */

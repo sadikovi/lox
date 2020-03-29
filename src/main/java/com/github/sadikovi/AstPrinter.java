@@ -57,6 +57,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     return parenthesize(expr.name.lexeme);
   }
 
+  @Override
+  public String visit(Expr.Assign expr) {
+    return expr.name.lexeme + " = " + expr.expression.accept(this);
+  }
+
   private String parenthesize(String lexeme, Expr... expressions) {
     StringBuilder sb = new StringBuilder();
     sb.append("(");
