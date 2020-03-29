@@ -62,6 +62,19 @@ abstract class Expr {
     }
   }
 
+  static class Variable extends Expr {
+    final Token name;
+
+    Variable(Token name) {
+      this.name = name;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   public abstract <R> R accept(Visitor<R> visitor);
 
   /**
@@ -72,5 +85,6 @@ abstract class Expr {
     R visit(Grouping expr);
     R visit(Literal expr);
     R visit(Unary expr);
+    R visit(Variable expr);
   }
 }

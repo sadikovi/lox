@@ -8,6 +8,8 @@ import com.github.sadikovi.TokenType.*;
  * Evaluates expressions.
  */
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+  private final Environment env = new Environment();
+
   public void interpret(List<Stmt> statements) {
     try {
       for (Stmt statement : statements) {
@@ -28,6 +30,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Void visit(Stmt.Print stmt) {
     Object value = stmt.expression.accept(this);
     System.out.println(stringify(value));
+    return null;
+  }
+
+  @Override
+  public Void visit(Stmt.Var stmt) {
+    Object value = null;
+    if (stmt.expression != null) {
+      value = stmt.expression.accept(this);
+    }
+    env.define(stmt.name.lexeme, value);
     return null;
   }
 
@@ -113,6 +125,11 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       default:
         throw new RuntimeError(token, "Unreachable");
     }
+  }
+
+  @Override
+  public Object visit(Expr.Variable expr) {
+    return env.get(expr.name);
   }
 
   /** Evaluates expression */

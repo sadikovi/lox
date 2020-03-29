@@ -27,6 +27,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
+  public String visit(Stmt.Var stmt) {
+    return "var " + stmt.name.lexeme + " = " + stmt.expression.accept(this) + ";";
+  }
+
+  @Override
   public String visit(Expr.Binary expr) {
     return parenthesize(expr.operator.lexeme, expr.left, expr.right);
   }
@@ -45,6 +50,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   @Override
   public String visit(Expr.Unary expr) {
     return parenthesize(expr.operator.lexeme, expr.right);
+  }
+
+  @Override
+  public String visit(Expr.Variable expr) {
+    return parenthesize(expr.name.lexeme);
   }
 
   private String parenthesize(String lexeme, Expr... expressions) {

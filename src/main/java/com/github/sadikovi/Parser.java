@@ -8,11 +8,14 @@ import static com.github.sadikovi.TokenType.*;
 /**
  * Parser for Lox grammar.
  *
- * program   -> statement* EOF ;
- * statement -> exprStmt
- *            | printStmt ;
- * exprStmt  -> expression ";" ;
- * printStmt -> "print" expression ";" ;
+ * program        -> statement* EOF ;
+ * declaration    -> varDecl
+ *                | statement ;
+ * varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
+ * statement      -> exprStmt
+ *                | printStmt ;
+ * exprStmt       -> expression ";" ;
+ * printStmt      -> "print" expression ";" ;
  *
  * expression     -> equality ;
  * equality       -> comparison ( ( "!=" | "==" ) comparison )* ;
@@ -22,7 +25,8 @@ import static com.github.sadikovi.TokenType.*;
  * unary          -> ( "!" | "-" ) unary
  *                | primary ;
  * primary        -> NUMBER | STRING | "false" | "true" | "nil"
- *                | "(" expression ")" ;
+ *                | "(" expression ")"
+ *                | IDENTIFIER ;
  */
 class Parser {
   public static class ParseError extends RuntimeException { }
@@ -36,15 +40,11 @@ class Parser {
   }
 
   public List<Stmt> parse() {
-    try {
-      List<Stmt> statements = new ArrayList<Stmt>();
-      while (!isAtEnd()) {
-        statements.add(statement());
-      }
-      return statements;
-    } catch (ParseError err) {
-      return null;
+    List<Stmt> statements = new ArrayList<Stmt>();
+    while (!isAtEnd()) {
+      statements.add(declaration());
     }
+    return statements;
   }
 
   /** Returns false if there are no tokens left or we have reached the end */
@@ -103,6 +103,32 @@ class Parser {
   private ParseError error(Token token, String message) {
     Lox.report(token, message);
     throw new ParseError();
+  }
+
+  private Stmt declaration() {
+    try {
+      if (check(VAR)) {
+        advance();
+        return varDeclaration();
+      }
+      return statement();
+    } catch (ParseError err) {
+      synchronize();
+      return null;
+    }
+  }
+
+  private Stmt varDeclaration() {
+    if (!check(IDENTIFIER)) throw error(peek(), "Expected variable name");
+    Token name = peekAndAdvance();
+    Expr expression = null;
+    if (check(EQUAL)) {
+      advance();
+      expression = expression();
+      if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after expression");
+      advance();
+    }
+    return new Stmt.Var(name, expression);
   }
 
   private Stmt statement() {
@@ -210,6 +236,10 @@ class Parser {
     if (check(NIL)) {
       advance();
       return new Expr.Literal(null);
+    }
+
+    if (check(IDENTIFIER)) {
+      return new Expr.Variable(peekAndAdvance());
     }
 
     if (check(LEFT_PAREN)) {
