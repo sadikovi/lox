@@ -33,7 +33,7 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
   @Override
   public String visit(Stmt.Expression stmt) {
-    return stmt.expression.accept(this) + ";";
+    return stmt.expression.accept(this);
   }
 
   @Override

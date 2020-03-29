@@ -11,10 +11,15 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   // Represents the current environment (global or for a current block)
   private Environment env = new Environment();
 
-  public void interpret(List<Stmt> statements) {
+  public void interpret(List<Stmt> statements, boolean printExpressions) {
     try {
       for (Stmt statement : statements) {
-        statement.accept(this);
+        if (printExpressions && statement instanceof Stmt.Expression) {
+          // this is mostly for REPL, so it can print expressions without requiring "print".
+          new Stmt.Print(((Stmt.Expression) statement).expression).accept(this);
+        } else {
+          statement.accept(this);
+        }
       }
     } catch (RuntimeError error) {
       Lox.runtimeError(error);

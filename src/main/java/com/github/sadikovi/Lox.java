@@ -30,7 +30,7 @@ public class Lox {
   /** Executes a source file */
   private static void runFile(String path) throws IOException {
     byte[] bytes = Files.readAllBytes(Paths.get(path));
-    run(new String(bytes, Charset.defaultCharset()));
+    run(new String(bytes, Charset.defaultCharset()), false);
     if (hadError) System.exit(64);
     if (hadRuntimeError) System.exit(70);
   }
@@ -43,7 +43,7 @@ public class Lox {
     while (true) {
       try {
         System.out.print("> ");
-        run(reader.readLine());
+        run(reader.readLine(), true);
         hadError = false;
       } catch (Exception err) {
         // Exit on Ctrl-D
@@ -54,7 +54,7 @@ public class Lox {
   }
 
   /** Runs command */
-  private static void run(String command) {
+  private static void run(String command, boolean printExpressions) {
     Scanner scanner = new Scanner(command);
     List<Token> tokens = scanner.getTokens();
 
@@ -77,7 +77,9 @@ public class Lox {
     System.out.println("== Eval ==");
 
     // Evaluate statements
-    interpreter.interpret(statements);
+    // If `printExpressions` is true, convert all expressions into print statements, i.e.
+    // evaluates expressions and prints the result.
+    interpreter.interpret(statements, printExpressions);
   }
 
   static void error(int line, String message) {
