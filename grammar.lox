@@ -60,5 +60,5 @@ while (a < 10000) {
 print "## Example 5";
 
 for (var i = 0; i < 10; i = i + 1) {
-  print "iteration " + i
+  print "iteration " + i;
 }
