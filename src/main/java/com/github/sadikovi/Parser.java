@@ -15,11 +15,13 @@ import static com.github.sadikovi.TokenType.*;
  * statement      -> exprStmt
  *                | ifStmt
  *                | printStmt
+ *                | whileStmt
  *                | block ;
  * exprStmt       -> expression ";" ;
  * printStmt      -> "print" expression ";" ;
  * block          -> "{" declaration* "}" ;
  * ifStmt         -> "if" "(" expression ")" statement ("else" statement)? ;
+ * whileStmt      -> "while" "(" expression ")" statement ;
  *
  * expression     -> assignment ;
  * assignment     -> IDENTIFIER "=" assignment
@@ -148,6 +150,10 @@ class Parser {
       advance();
       return printStatement();
     }
+    if (check(WHILE)) {
+      advance();
+      return whileStatement();
+    }
     if (check(LEFT_BRACE)) {
       advance();
       return block();
@@ -178,6 +184,18 @@ class Parser {
     if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after expression");
     advance();
     return new Stmt.Print(expr);
+  }
+
+  private Stmt whileStatement() {
+    if (!check(LEFT_PAREN)) throw error(peek(), "Expected '(' after 'while'");
+    advance();
+    Expr condition = expression();
+
+    if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after 'while' condition");
+    advance();
+    Stmt body = statement();
+
+    return new Stmt.While(condition, body);
   }
 
   private Stmt expressionStatement() {

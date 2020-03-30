@@ -47,6 +47,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
+  public String visit(Stmt.While stmt) {
+    return "while";
+  }
+
+  @Override
   public String visit(Stmt.Var stmt) {
     StringBuilder sb = new StringBuilder();
     sb.append("var " + stmt.name.lexeme);

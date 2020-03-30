@@ -64,6 +64,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Stmt.While stmt) {
+    while (isTruthy(eval(stmt.condition))) {
+      stmt.body.accept(this);
+    }
+    return null;
+  }
+
+  @Override
   public Void visit(Stmt.Var stmt) {
     if (stmt.expression != null) {
       env.define(stmt.name.lexeme, eval(stmt.expression));
