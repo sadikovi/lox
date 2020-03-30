@@ -37,6 +37,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
+  public String visit(Stmt.If stmt) {
+    return "If";
+  }
+
+  @Override
   public String visit(Stmt.Print stmt) {
     return "print " + stmt.expression.accept(this) + ";";
   }
@@ -66,6 +71,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   public String visit(Expr.Literal expr) {
     if (expr.value == null) return "nil";
     return expr.value.toString();
+  }
+
+  @Override
+  public String visit(Expr.Logical expr) {
+    return "logical";
   }
 
   @Override

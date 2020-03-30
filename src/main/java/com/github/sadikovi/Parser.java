@@ -13,15 +13,19 @@ import static com.github.sadikovi.TokenType.*;
  *                | statement ;
  * varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
  * statement      -> exprStmt
+ *                | ifStmt
  *                | printStmt
  *                | block ;
  * exprStmt       -> expression ";" ;
  * printStmt      -> "print" expression ";" ;
  * block          -> "{" declaration* "}" ;
+ * ifStmt         -> "if" "(" expression ")" statement ("else" statement)? ;
  *
  * expression     -> assignment ;
  * assignment     -> IDENTIFIER "=" assignment
- *                | equality ;
+ *                | logic_or ;
+ * logic_or       -> logic_and ( "or" logic_and )* ;
+ * logic_and      -> equality ( "and" equality )* ;
  * equality       -> comparison ( ( "!=" | "==" ) comparison )* ;
  * comparison     -> addition ( ( ">" | ">=" | "<" | "<=" ) addition )* ;
  * addition       -> multiplication ( ( "-" | "+" ) multiplication )* ;
@@ -136,6 +140,10 @@ class Parser {
   }
 
   private Stmt statement() {
+    if (check(IF)) {
+      advance();
+      return ifStatement();
+    }
     if (check(PRINT)) {
       advance();
       return printStatement();
@@ -145,6 +153,24 @@ class Parser {
       return block();
     }
     return expressionStatement();
+  }
+
+  private Stmt ifStatement() {
+    if (!check(LEFT_PAREN)) throw error(peek(), "Expected '(' after 'if'");
+    advance();
+    Expr condition = expression();
+
+    if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after 'if' condition");
+    advance();
+    Stmt thenBranch = statement();
+
+    Stmt elseBranch = null;
+    if (check(ELSE)) {
+      advance();
+      elseBranch = statement();
+    }
+
+    return new Stmt.If(condition, thenBranch, elseBranch);
   }
 
   private Stmt printStatement() {
@@ -176,7 +202,7 @@ class Parser {
   }
 
   private Expr assignment() {
-    Expr expr = equality();
+    Expr expr = or();
 
     if (check(EQUAL)) {
       Token equals = peekAndAdvance();
@@ -188,6 +214,30 @@ class Parser {
       }
 
       error(equals, "Invalid assignment target");
+    }
+
+    return expr;
+  }
+
+  private Expr or() {
+    Expr expr = and();
+
+    while (check(OR) && !isAtEnd()) {
+      Token operator = peekAndAdvance();
+      Expr right = and();
+      expr = new Expr.Logical(expr, operator, right);
+    }
+
+    return expr;
+  }
+
+  private Expr and() {
+    Expr expr = equality();
+
+    while (check(AND) && !isAtEnd()) {
+      Token operator = peekAndAdvance();
+      Expr right = equality();
+      expr = new Expr.Logical(expr, operator, right);
     }
 
     return expr;

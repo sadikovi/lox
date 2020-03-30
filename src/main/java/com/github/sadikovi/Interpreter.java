@@ -47,6 +47,16 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Stmt.If stmt) {
+    if (isTruthy(eval(stmt.condition))) {
+      stmt.thenBranch.accept(this);
+    } else if (stmt.elseBranch != null) {
+      stmt.elseBranch.accept(this);
+    }
+    return null;
+  }
+
+  @Override
   public Void visit(Stmt.Print stmt) {
     Object value = eval(stmt.expression);
     System.out.println(stringify(value));
@@ -128,6 +138,17 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Object visit(Expr.Literal expr) {
     return expr.value;
+  }
+
+  @Override
+  public Object visit(Expr.Logical expr) {
+    Object left = eval(expr.left);
+    if (expr.operator.type == TokenType.OR) {
+      if (isTruthy(left)) return left;
+    } else {
+      if (!isTruthy(left)) return left;
+    }
+    return eval(expr.right);
   }
 
   @Override
