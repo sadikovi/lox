@@ -1,5 +1,6 @@
 package com.github.sadikovi;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +14,7 @@ import static com.github.sadikovi.TokenType.*;
  *                | statement ;
  * varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
  * statement      -> exprStmt
+ *                | forStmt
  *                | ifStmt
  *                | printStmt
  *                | whileStmt
@@ -22,6 +24,9 @@ import static com.github.sadikovi.TokenType.*;
  * block          -> "{" declaration* "}" ;
  * ifStmt         -> "if" "(" expression ")" statement ("else" statement)? ;
  * whileStmt      -> "while" "(" expression ")" statement ;
+ * forStmt        -> "for" "(" ( varDecl | exprStmt | ";" )
+ *                      expression? ";"
+ *                      expression? ")" statement ;
  *
  * expression     -> assignment ;
  * assignment     -> IDENTIFIER "=" assignment
@@ -142,6 +147,10 @@ class Parser {
   }
 
   private Stmt statement() {
+    if (check(FOR)) {
+      advance();
+      return forStatement();
+    }
     if (check(IF)) {
       advance();
       return ifStatement();
@@ -159,6 +168,53 @@ class Parser {
       return block();
     }
     return expressionStatement();
+  }
+
+  private Stmt forStatement() {
+    if (!check(LEFT_PAREN)) throw error(peek(), "Expected '(' after 'for'");
+    advance();
+
+    Stmt initializer;
+    if (check(SEMICOLON)) {
+      advance();
+      initializer = null;
+    } else if (check(VAR)) {
+      advance();
+      initializer = varDeclaration();
+    } else {
+      initializer = expressionStatement();
+    }
+
+    Expr condition = null;
+    if (!check(SEMICOLON)) {
+      condition = expression();
+    }
+    if (!check(SEMICOLON)) throw error(peek(), "Expeced ';' after 'for' condition");
+    advance();
+
+    Expr increment = null;
+    if (!check(RIGHT_PAREN)) {
+      increment = expression();
+    }
+    if (!check(RIGHT_PAREN)) throw error(peek(), "Expeced ')' after 'for' clause");
+    advance();
+
+    Stmt body = statement();
+
+    if (increment != null) {
+      body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
+    }
+
+    if (condition == null) {
+      condition = new Expr.Literal(true);
+    }
+    body = new Stmt.While(condition, body);
+
+    if (initializer != null) {
+      body = new Stmt.Block(Arrays.asList(initializer, body));
+    }
+
+    return body;
   }
 
   private Stmt ifStatement() {

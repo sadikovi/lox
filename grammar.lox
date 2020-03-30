@@ -44,3 +44,21 @@ var a = 1;
 print a;
 
 100 + 200;
+
+print "## Example 4";
+
+var a = 0;
+var b = 1;
+
+while (a < 10000) {
+  print a;
+  var temp = a;
+  a = b;
+  b = temp + b;
+}
+
+print "## Example 5";
+
+for (var i = 0; i < 10; i = i + 1) {
+  print "iteration " + i
+}
