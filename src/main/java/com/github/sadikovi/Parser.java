@@ -18,15 +18,17 @@ import static com.github.sadikovi.TokenType.*;
  *                | ifStmt
  *                | printStmt
  *                | whileStmt
+ *                | breakStmt
  *                | block ;
  * exprStmt       -> expression ";" ;
  * printStmt      -> "print" expression ";" ;
  * block          -> "{" declaration* "}" ;
  * ifStmt         -> "if" "(" expression ")" statement ("else" statement)? ;
- * whileStmt      -> "while" "(" expression ")" statement ;
+ * whileStmt      -> "while" "(" expression ")" statement | breakStmt ;
  * forStmt        -> "for" "(" ( varDecl | exprStmt | ";" )
  *                      expression? ";"
- *                      expression? ")" statement ;
+ *                      expression? ")" statement | breakStmt ;
+ * breakStmt      -> "break" ";" ;
  *
  * expression     -> assignment ;
  * assignment     -> IDENTIFIER "=" assignment
@@ -48,10 +50,12 @@ class Parser {
 
   private final List<Token> tokens;
   private int current;
+  private int loopDepth; // flag to indicate the loop (while or for) depth for "break"
 
   Parser(List<Token> tokens) {
     this.tokens = tokens;
     this.current = 0;
+    this.loopDepth = 0;
   }
 
   public List<Stmt> parse() {
@@ -163,6 +167,10 @@ class Parser {
       advance();
       return whileStatement();
     }
+    if (check(BREAK)) {
+      advance();
+      return breakStatement();
+    }
     if (check(LEFT_BRACE)) {
       advance();
       return block();
@@ -199,7 +207,7 @@ class Parser {
     if (!check(RIGHT_PAREN)) throw error(peek(), "Expeced ')' after 'for' clause");
     advance();
 
-    Stmt body = statement();
+    Stmt body = statementWithBreak();
 
     if (increment != null) {
       body = new Stmt.Block(Arrays.asList(body, new Stmt.Expression(increment)));
@@ -249,9 +257,26 @@ class Parser {
 
     if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after 'while' condition");
     advance();
-    Stmt body = statement();
+    Stmt body = statementWithBreak();
 
     return new Stmt.While(condition, body);
+  }
+
+  /** Returns statement with support of rolling back "containsBreak" flag */
+  private Stmt statementWithBreak() {
+    loopDepth++;
+    try {
+      return statement();
+    } finally {
+      loopDepth--;
+    }
+  }
+
+  private Stmt breakStatement() {
+    if (loopDepth <= 0) throw error(peek(), "'break' outside loop"); // error message from Python
+    if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after 'break'");
+    advance();
+    return new Stmt.Break();
   }
 
   private Stmt expressionStatement() {

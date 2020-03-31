@@ -62,3 +62,24 @@ print "## Example 5";
 for (var i = 0; i < 10; i = i + 1) {
   print "iteration " + i;
 }
+
+print "## Example 6";
+
+var a = 0;
+
+while (a < 100) {
+  if (a > 5) {
+    print "breaking loop";
+    break;
+  }
+  print a;
+  a = a + 1;
+}
+
+for (var i = 0; i < 100; i = i + 1) {
+  if (i > 5) {
+    print "breaking loop";
+    break;
+  }
+  print i;
+}

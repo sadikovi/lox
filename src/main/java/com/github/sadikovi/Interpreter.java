@@ -66,9 +66,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   @Override
   public Void visit(Stmt.While stmt) {
     while (isTruthy(eval(stmt.condition))) {
-      stmt.body.accept(this);
+      try {
+        stmt.body.accept(this);
+      } catch (BreakLoop err) {
+        // stop while loop
+        break;
+      }
     }
     return null;
+  }
+
+  @Override
+  public Void visit(Stmt.Break stmt) {
+    throw new BreakLoop();
   }
 
   @Override
@@ -244,4 +254,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     if (isString(obj)) return (String) obj;
     throw new RuntimeError(token, "Operand must be a string");
   }
+
+  /** Exception to indicate break in the loop */
+  static class BreakLoop extends RuntimeException { }
 }
