@@ -32,6 +32,23 @@ abstract class Stmt {
     }
   }
 
+  static class Function extends Stmt {
+    final Token name;
+    final List<Token> params;
+    final List<Stmt> body;
+
+    Function(Token name, List<Token> params, List<Stmt> body) {
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class If extends Stmt {
     final Expr condition;
     final Stmt thenBranch;
@@ -54,6 +71,19 @@ abstract class Stmt {
 
     Print(Expr expression) {
       this.expression = expression;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
+  static class Return extends Stmt {
+    final Expr value;
+
+    Return(Token keyword, Expr value) {
+      this.value = value;
     }
 
     @Override
@@ -107,8 +137,10 @@ abstract class Stmt {
   interface Visitor<R> {
     R visit(Block stmt);
     R visit(Expression stmt);
+    R visit(Function stmt);
     R visit(If stmt);
     R visit(Print stmt);
+    R visit(Return stmt);
     R visit(While stmt);
     R visit(Break stmt);
     R visit(Var stmt);

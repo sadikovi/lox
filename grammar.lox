@@ -83,3 +83,30 @@ for (var i = 0; i < 100; i = i + 1) {
   }
   print i;
 }
+
+print "## Example 7";
+
+fun fibonacci(n) {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+for (var i = 0; i < 10; i = i + 1) {
+  print i + "th fibonacci number: " + fibonacci(i);
+}
+
+print "## Example 8";
+
+fun makeCounter() {
+  var i = 0;
+  fun count() {
+    i = i + 1;
+    print i;
+  }
+
+  return count;
+}
+
+var counter = makeCounter();
+counter(); // "1".
+counter(); // "2".

@@ -1,5 +1,6 @@
 package com.github.sadikovi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.github.sadikovi.TokenType.*;
@@ -9,7 +10,27 @@ import com.github.sadikovi.TokenType.*;
  */
 class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   // Represents the current environment (global or for a current block)
-  private Environment env = new Environment();
+  final Environment globals = new Environment();
+  private Environment env = globals;
+
+  Interpreter() {
+    globals.define("clock", new LoxCallable() {
+      @Override
+      public int arity() {
+        return 0;
+      }
+
+      @Override
+      public Object call(Interpreter interpreter, List<Object> arguments) {
+        return (double) System.currentTimeMillis() / 1000.0;
+      }
+
+      @Override
+      public String toString() {
+        return "<native fn>";
+      }
+    });
+  }
 
   public void interpret(List<Stmt> statements, boolean printExpressions) {
     try {
@@ -28,21 +49,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visit(Stmt.Block stmt) {
-    Environment parent = env;
-    env = new Environment(parent);
-    try {
-      for (Stmt statement : stmt.statements) {
-        statement.accept(this);
-      }
-    } finally {
-      env = parent;
-    }
+    executeBlock(stmt.statements, new Environment(env));
     return null;
   }
 
   @Override
   public Void visit(Stmt.Expression stmt) {
     eval(stmt.expression);
+    return null;
+  }
+
+  @Override
+  public Void visit(Stmt.Function stmt) {
+    LoxFunction function = new LoxFunction(stmt, env);
+    env.define(stmt.name.lexeme, function);
     return null;
   }
 
@@ -64,11 +84,20 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Stmt.Return stmt) {
+    Object value = null;
+    if (stmt.value != null) {
+      value = eval(stmt.value);
+    }
+    throw new Return(value);
+  }
+
+  @Override
   public Void visit(Stmt.While stmt) {
     while (isTruthy(eval(stmt.condition))) {
       try {
         stmt.body.accept(this);
-      } catch (BreakLoop err) {
+      } catch (Break err) {
         // stop while loop
         break;
       }
@@ -78,7 +107,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Void visit(Stmt.Break stmt) {
-    throw new BreakLoop();
+    throw new Break();
   }
 
   @Override
@@ -198,6 +227,42 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     return value;
   }
 
+  @Override
+  public Object visit(Expr.Call expr) {
+    Object callee = eval(expr.callee);
+
+    List<Object> arguments = new ArrayList<Object>();
+    for (Expr argument : expr.arguments) {
+      arguments.add(eval(argument));
+    }
+
+    if (!(callee instanceof LoxCallable)) {
+      throw new RuntimeError(expr.paren, "Can only call functions and classes");
+    }
+
+    LoxCallable function = (LoxCallable) callee;
+
+    if (function.arity() != arguments.size()) {
+      throw new RuntimeError(expr.paren,
+        "Expected " + function.arity() + " arguments, got " + arguments.size());
+    }
+
+    return function.call(this, arguments);
+  }
+
+  /** Executes list of statements in provided environment */
+  void executeBlock(List<Stmt> statements, Environment environment) {
+    Environment parent = env;
+    env = environment;
+    try {
+      for (Stmt statement : statements) {
+        statement.accept(this);
+      }
+    } finally {
+      env = parent;
+    }
+  }
+
   /** Evaluates expression */
   private Object eval(Expr expr) {
     return expr.accept(this);
@@ -256,5 +321,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   /** Exception to indicate break in the loop */
-  static class BreakLoop extends RuntimeException { }
+  static class Break extends RuntimeException {
+    Break() {
+      super(null, null, false, false);
+    }
+  }
+
+  /** Exception to indicate return in the function */
+  static class Return extends RuntimeException {
+    final Object value;
+
+    Return(Object value) {
+      super(null, null, false, false);
+      this.value = value;
+    }
+  }
 }

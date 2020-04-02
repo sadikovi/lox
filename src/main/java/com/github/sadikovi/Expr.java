@@ -1,5 +1,7 @@
 package com.github.sadikovi;
 
+import java.util.List;
+
 /**
  * Expressions for the parser.
  */
@@ -107,6 +109,23 @@ abstract class Expr {
     }
   }
 
+  static class Call extends Expr {
+    final Expr callee;
+    final Token paren;
+    final List<Expr> arguments;
+
+    Call(Expr callee, Token paren, List<Expr> arguments) {
+      this.callee = callee;
+      this.paren = paren;
+      this.arguments = arguments;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   public abstract <R> R accept(Visitor<R> visitor);
 
   /**
@@ -120,5 +139,6 @@ abstract class Expr {
     R visit(Unary expr);
     R visit(Variable expr);
     R visit(Assign expr);
+    R visit(Call expr);
   }
 }

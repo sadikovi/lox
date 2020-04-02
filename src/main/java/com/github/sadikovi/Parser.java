@@ -10,13 +10,15 @@ import static com.github.sadikovi.TokenType.*;
  * Parser for Lox grammar.
  *
  * program        -> declaration* EOF ;
- * declaration    -> varDecl
+ * declaration    -> funDecl
+ *                | varDecl
  *                | statement ;
  * varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
  * statement      -> exprStmt
  *                | forStmt
  *                | ifStmt
  *                | printStmt
+ *                | returnStmt
  *                | whileStmt
  *                | breakStmt
  *                | block ;
@@ -29,6 +31,10 @@ import static com.github.sadikovi.TokenType.*;
  *                      expression? ";"
  *                      expression? ")" statement | breakStmt ;
  * breakStmt      -> "break" ";" ;
+ * funDecl        -> "fun" function
+ * function       -> IDENTIFIER "(" parameters? ")" "{" block "}" ;
+ * parameters     -> IDENTIFIER ( "," IDENTIFIER )* ;
+ * returnStmt     -> "return" expression? ";" ;
  *
  * expression     -> assignment ;
  * assignment     -> IDENTIFIER "=" assignment
@@ -40,10 +46,13 @@ import static com.github.sadikovi.TokenType.*;
  * addition       -> multiplication ( ( "-" | "+" ) multiplication )* ;
  * multiplication -> unary ( ( "/" | "*" ) unary )* ;
  * unary          -> ( "!" | "-" ) unary
+ *                | call
  *                | primary ;
+ * call           -> primary ( "(" arguments? ")" )* ;
  * primary        -> NUMBER | STRING | "false" | "true" | "nil"
  *                | "(" expression ")"
  *                | IDENTIFIER ;
+ * arguments      -> expression ( "," expresssion )* ;
  */
 class Parser {
   public static class ParseError extends RuntimeException { }
@@ -126,6 +135,10 @@ class Parser {
 
   private Stmt declaration() {
     try {
+      if (check(FUN)) {
+        advance();
+        return function("function");
+      }
       if (check(VAR)) {
         advance();
         return varDeclaration();
@@ -135,6 +148,37 @@ class Parser {
       synchronize();
       return null;
     }
+  }
+
+  private Stmt function(String kind) {
+    if (!check(IDENTIFIER)) throw error(peek(), "Expected " + kind + " name");
+    Token name = peekAndAdvance();
+
+    if (!check(LEFT_PAREN)) throw error(peek(), "Expected '(' after " + kind + " name");
+    advance();
+
+    List<Token> params = new ArrayList<Token>();
+    if (!check(RIGHT_PAREN)) {
+      while (true) {
+        if (params.size() >= 255) {
+          error(peek(), "Cannot have more than 255 parameters");
+        }
+        if (!check(IDENTIFIER)) throw error(peek(), "Expected parameter name");
+        params.add(peekAndAdvance());
+        if (!check(COMMA)) break;
+        advance();
+      }
+    }
+
+    if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after " + kind + " parameters");
+    advance();
+
+    if (!check(LEFT_BRACE)) throw error(peek(), "Expected '{' before " + kind + " body");
+    advance();
+
+    List<Stmt> body = block();
+
+    return new Stmt.Function(name, params, body);
   }
 
   private Stmt varDeclaration() {
@@ -163,6 +207,9 @@ class Parser {
       advance();
       return printStatement();
     }
+    if (check(RETURN)) {
+      return returnStatement();
+    }
     if (check(WHILE)) {
       advance();
       return whileStatement();
@@ -173,7 +220,7 @@ class Parser {
     }
     if (check(LEFT_BRACE)) {
       advance();
-      return block();
+      return new Stmt.Block(block());
     }
     return expressionStatement();
   }
@@ -262,6 +309,19 @@ class Parser {
     return new Stmt.While(condition, body);
   }
 
+  private Stmt returnStatement() {
+    if (!check(RETURN)) throw error(peek(), "Expected 'return' keyword");
+    Token keyword = peekAndAdvance();
+    Expr value = null;
+    if (!check(SEMICOLON)) {
+      value = expression();
+    }
+    if (!check(SEMICOLON)) throw error(peek(), "Expected ';' after return value");
+    advance();
+
+    return new Stmt.Return(keyword, value);
+  }
+
   /** Returns statement with support of rolling back "containsBreak" flag */
   private Stmt statementWithBreak() {
     loopDepth++;
@@ -286,14 +346,14 @@ class Parser {
     return new Stmt.Expression(expr);
   }
 
-  private Stmt block() {
+  private List<Stmt> block() {
     List<Stmt> statements = new ArrayList<Stmt>();
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
       statements.add(declaration());
     }
     if (!check(RIGHT_BRACE)) throw error(peek(), "Expected '}' after block");
     advance();
-    return new Stmt.Block(statements);
+    return statements;
   }
 
   private Expr expression() {
@@ -400,8 +460,35 @@ class Parser {
       Token op = peekAndAdvance();
       return new Expr.Unary(op, unary());
     } else {
-      return primary();
+      return call();
     }
+  }
+
+  private Expr call() {
+    Expr expr = primary();
+    while (check(LEFT_PAREN) && !isAtEnd()) {
+      advance();
+
+      List<Expr> arguments = new ArrayList<Expr>();
+
+      if (!check(RIGHT_PAREN)) {
+        // parse arguments
+        while (true) {
+          if (arguments.size() >= 255) {
+            error(peek(), "Cannot have more than 255 arguments");
+          }
+          arguments.add(expression());
+          if (!check(COMMA)) break;
+          advance();
+        }
+      }
+
+      if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after function call");
+      Token paren = peekAndAdvance();
+
+      expr = new Expr.Call(expr, paren, arguments);
+    }
+    return expr;
   }
 
   private Expr primary() {

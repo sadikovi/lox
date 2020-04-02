@@ -37,6 +37,21 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
+  public String visit(Stmt.Function stmt) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("fun " + stmt.name.lexeme);
+    sb.append("(");
+    for (int i = 0; i < stmt.params.size(); i++) {
+      sb.append(stmt.params.get(i).lexeme);
+      if (i < stmt.params.size() - 1) {
+        sb.append(", ");
+      }
+    }
+    sb.append(")");
+    return sb.toString();
+  }
+
+  @Override
   public String visit(Stmt.If stmt) {
     StringBuilder sb = new StringBuilder();
     sb.append("if (");
@@ -53,6 +68,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   @Override
   public String visit(Stmt.Print stmt) {
     return "print " + stmt.expression.accept(this) + ";";
+  }
+
+  @Override
+  public String visit(Stmt.Return stmt) {
+    return "return " + stmt.value.accept(this) + ";";
   }
 
   @Override
@@ -115,6 +135,22 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   @Override
   public String visit(Expr.Assign expr) {
     return expr.name.lexeme + " = " + expr.expression.accept(this);
+  }
+
+  @Override
+  public String visit(Expr.Call expr) {
+    StringBuilder sb = new StringBuilder();
+    sb.append("<function call> " + expr.callee.accept(this));
+    sb.append("(");
+    for (int i = 0; i < expr.arguments.size(); i++) {
+      Expr argument = expr.arguments.get(i);
+      sb.append(argument.accept(this));
+      if (i < expr.arguments.size() - 1) {
+        sb.append(", ");
+      }
+    }
+    sb.append(")");
+    return sb.toString();
   }
 
   private String parenthesize(String lexeme, Expr... expressions) {
