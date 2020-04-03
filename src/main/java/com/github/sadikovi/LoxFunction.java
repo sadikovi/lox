@@ -2,31 +2,44 @@ package com.github.sadikovi;
 
 import java.util.List;
 
+/**
+ * Represents function in Lox.
+ * If name is null, then the function is a lambda function.
+ */
 class LoxFunction implements LoxCallable {
-  final Stmt.Function declaration;
+  final Token name;
+  final List<Token> params;
+  final List<Stmt> body;
   final Environment closure;
 
-  LoxFunction(Stmt.Function declaration, Environment closure) {
-    this.declaration = declaration;
+  LoxFunction(Token name, List<Token> params, List<Stmt> body, Environment closure) {
+    this.name = name; // can be null for anonymous functions
+    this.params = params;
+    this.body = body;
     this.closure = closure;
+  }
+
+  /** Returns true if this function is a lambda function */
+  public boolean isLambda() {
+    return name == null;
   }
 
   @Override
   public int arity() {
-    return declaration.params.size();
+    return params.size();
   }
 
   @Override
   public Object call(Interpreter interpreter, List<Object> arguments) {
     Environment env = new Environment(closure);
-    for (int i = 0; i < arity(); i++) {
-      String param = declaration.params.get(i).lexeme;
+    for (int i = 0; i < params.size(); i++) {
+      String param = params.get(i).lexeme;
       Object value = arguments.get(i);
       env.define(param, value);
     }
 
     try {
-      interpreter.executeBlock(declaration.body, env);
+      interpreter.executeBlock(body, env);
     } catch (Interpreter.Return returnValue) {
       return returnValue.value;
     }
@@ -35,6 +48,20 @@ class LoxFunction implements LoxCallable {
 
   @Override
   public String toString() {
-    return "<fn " + declaration.name.lexeme + ">";
+    StringBuilder sb = new StringBuilder();
+    if (isLambda()) {
+      sb.append("<anonymous fn");
+    } else {
+      sb.append("<fn " + name.lexeme);
+    }
+    sb.append(" (");
+    for (int i = 0; i < params.size(); i++) {
+      sb.append(params.get(i).lexeme);
+      if (i < params.size() - 1) {
+        sb.append(", ");
+      }
+    }
+    sb.append(")>");
+    return sb.toString();
   }
 }

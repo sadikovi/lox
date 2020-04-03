@@ -153,6 +153,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     return sb.toString();
   }
 
+  @Override
+  public String visit(Expr.Lambda expr) {
+    return "<lambda fn>";
+  }
+
   private String parenthesize(String lexeme, Expr... expressions) {
     StringBuilder sb = new StringBuilder();
     sb.append("(");

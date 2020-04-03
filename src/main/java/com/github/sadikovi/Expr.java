@@ -126,6 +126,21 @@ abstract class Expr {
     }
   }
 
+  static class Lambda extends Expr {
+    final List<Token> params;
+    final List<Stmt> body;
+
+    Lambda(List<Token> params, List<Stmt> body) {
+      this.params = params;
+      this.body = body;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   public abstract <R> R accept(Visitor<R> visitor);
 
   /**
@@ -140,5 +155,6 @@ abstract class Expr {
     R visit(Variable expr);
     R visit(Assign expr);
     R visit(Call expr);
+    R visit(Lambda expr);
   }
 }

@@ -38,6 +38,7 @@ import static com.github.sadikovi.TokenType.*;
  *
  * expression     -> assignment ;
  * assignment     -> IDENTIFIER "=" assignment
+ *                | lambda
  *                | logic_or ;
  * logic_or       -> logic_and ( "or" logic_and )* ;
  * logic_and      -> equality ( "and" equality )* ;
@@ -361,6 +362,11 @@ class Parser {
   }
 
   private Expr assignment() {
+    if (check(FUN)) {
+      advance();
+      return lambdaExpression();
+    }
+
     Expr expr = or();
 
     if (check(EQUAL)) {
@@ -376,6 +382,34 @@ class Parser {
     }
 
     return expr;
+  }
+
+  private Expr lambdaExpression() {
+    if (!check(LEFT_PAREN)) throw error(peek(), "Expected '(' after function");
+    advance();
+
+    List<Token> params = new ArrayList<Token>();
+    if (!check(RIGHT_PAREN)) {
+      while (true) {
+        if (params.size() >= 255) {
+          error(peek(), "Cannot have more than 255 parameters");
+        }
+        if (!check(IDENTIFIER)) throw error(peek(), "Expected parameter name");
+        params.add(peekAndAdvance());
+        if (!check(COMMA)) break;
+        advance();
+      }
+    }
+
+    if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after function parameters");
+    advance();
+
+    if (!check(LEFT_BRACE)) throw error(peek(), "Expected '{' before function body");
+    advance();
+
+    List<Stmt> body = block();
+
+    return new Expr.Lambda(params, body);
   }
 
   private Expr or() {
