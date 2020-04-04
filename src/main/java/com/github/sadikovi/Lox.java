@@ -41,15 +41,15 @@ public class Lox {
     BufferedReader reader = new BufferedReader(input);
 
     while (true) {
-      try {
-        System.out.print("> ");
-        run(reader.readLine(), true);
-        hadError = false;
-      } catch (Exception err) {
-        // Exit on Ctrl-D
-        error(-1, err.toString());
+      System.out.print("> ");
+      String line = reader.readLine();
+      if (line == null) {
+        // Ctrl-D or EOL
+        System.out.println("Bye!");
         break;
       }
+      run(line, true);
+      hadError = false;
     }
   }
 
