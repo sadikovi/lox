@@ -19,6 +19,15 @@ abstract class Stmt {
     }
   }
 
+  static class Break extends Stmt {
+    Break() { }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Expression extends Stmt {
     final Expr expression;
 
@@ -109,15 +118,6 @@ abstract class Stmt {
     }
   }
 
-  static class Break extends Stmt {
-    Break() { }
-
-    @Override
-    public <R> R accept(Visitor<R> visitor) {
-      return visitor.visit(this);
-    }
-  }
-
   static class Var extends Stmt {
     final Token name;
     final Expr expression;
@@ -138,13 +138,13 @@ abstract class Stmt {
   /** Visitor to traverse statements */
   interface Visitor<R> {
     R visit(Block stmt);
+    R visit(Break stmt);
     R visit(Expression stmt);
     R visit(Function stmt);
     R visit(If stmt);
     R visit(Print stmt);
     R visit(Return stmt);
     R visit(While stmt);
-    R visit(Break stmt);
     R visit(Var stmt);
   }
 }

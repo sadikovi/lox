@@ -6,6 +6,21 @@ import java.util.List;
  * Expressions for the parser.
  */
 abstract class Expr {
+  static class Assign extends Expr {
+    final Token name;
+    final Expr expression;
+
+    Assign(Token name, Expr expression) {
+      this.name = name;
+      this.expression = expression;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Binary extends Expr {
     final Expr left;
     final Token operator;
@@ -23,11 +38,43 @@ abstract class Expr {
     }
   }
 
+  static class Call extends Expr {
+    final Expr callee;
+    final Token paren;
+    final List<Expr> arguments;
+
+    Call(Expr callee, Token paren, List<Expr> arguments) {
+      this.callee = callee;
+      this.paren = paren;
+      this.arguments = arguments;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Grouping extends Expr {
     final Expr expression;
 
     Grouping(Expr expression) {
       this.expression = expression;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
+  static class Lambda extends Expr {
+    final List<Token> params;
+    final List<Stmt> body;
+
+    Lambda(List<Token> params, List<Stmt> body) {
+      this.params = params;
+      this.body = body;
     }
 
     @Override
@@ -94,67 +141,20 @@ abstract class Expr {
     }
   }
 
-  static class Assign extends Expr {
-    final Token name;
-    final Expr expression;
-
-    Assign(Token name, Expr expression) {
-      this.name = name;
-      this.expression = expression;
-    }
-
-    @Override
-    public <R> R accept(Visitor<R> visitor) {
-      return visitor.visit(this);
-    }
-  }
-
-  static class Call extends Expr {
-    final Expr callee;
-    final Token paren;
-    final List<Expr> arguments;
-
-    Call(Expr callee, Token paren, List<Expr> arguments) {
-      this.callee = callee;
-      this.paren = paren;
-      this.arguments = arguments;
-    }
-
-    @Override
-    public <R> R accept(Visitor<R> visitor) {
-      return visitor.visit(this);
-    }
-  }
-
-  static class Lambda extends Expr {
-    final List<Token> params;
-    final List<Stmt> body;
-
-    Lambda(List<Token> params, List<Stmt> body) {
-      this.params = params;
-      this.body = body;
-    }
-
-    @Override
-    public <R> R accept(Visitor<R> visitor) {
-      return visitor.visit(this);
-    }
-  }
-
   public abstract <R> R accept(Visitor<R> visitor);
 
   /**
    * Visitor to traverse the nodes of Expr.
    */
   interface Visitor<R> {
+    R visit(Assign expr);
     R visit(Binary expr);
+    R visit(Call expr);
     R visit(Grouping expr);
+    R visit(Lambda expr);
     R visit(Literal expr);
     R visit(Logical expr);
     R visit(Unary expr);
     R visit(Variable expr);
-    R visit(Assign expr);
-    R visit(Call expr);
-    R visit(Lambda expr);
   }
 }
