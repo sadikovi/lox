@@ -1,7 +1,9 @@
 package com.github.sadikovi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.github.sadikovi.TokenType.*;
 
@@ -12,6 +14,7 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   // Represents the current environment (global or for a current block)
   final Environment globals = new Environment();
   private Environment env = globals;
+  private final Map<Expr, Integer> locals = new HashMap<Expr, Integer>();
 
   Interpreter() {
     globals.define("clock", new LoxCallable() {
@@ -217,13 +220,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
   @Override
   public Object visit(Expr.Variable expr) {
-    return env.get(expr.name);
+    return lookupVariable(expr.name, expr);
   }
 
   @Override
   public Object visit(Expr.Assign expr) {
     Object value = eval(expr.expression);
-    env.assign(expr.name, value);
+
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      env.assignAt(expr.name, value, distance);
+    } else {
+      globals.assign(expr.name, value);
+    }
     return value;
   }
 
@@ -265,6 +274,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       }
     } finally {
       env = parent;
+    }
+  }
+
+  void resolve(Expr expr, int depth) {
+    locals.put(expr, depth);
+  }
+
+  private Object lookupVariable(Token name, Expr expr) {
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      return env.getAt(name, distance);
+    } else {
+      return globals.get(name);
     }
   }
 

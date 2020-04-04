@@ -38,8 +38,8 @@ print "## Example 3";
 
 var a = 1;
 {
-  var a = a + 2;
-  print a;
+  var a2 = a + 2;
+  print a2;
 }
 print a;
 
@@ -138,3 +138,29 @@ print c;
 c();
 
 // fun () {};
+
+print "Example 10";
+
+fun func1() {
+  var a = 1;
+  print "func1, " + a;
+}
+
+fun func2() {
+  // var a = nil;
+  // var b;
+  print "func2";
+}
+
+fun func3() {
+  print "func3";
+
+  /*
+  fun func4() {
+    print "func4";
+  }
+  */
+}
+
+func1();
+func2();

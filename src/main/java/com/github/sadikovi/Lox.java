@@ -74,12 +74,23 @@ public class Lox {
     // If the tree was correct, print the expression
     System.out.println(new AstPrinter().print(statements));
 
+    System.out.println("== Resolve ==");
+
+    Resolver resolver = new Resolver(interpreter);
+    resolver.resolve(statements);
+
+    if (hadError) return;
+
     System.out.println("== Eval ==");
 
     // Evaluate statements
     // If `printExpressions` is true, convert all expressions into print statements, i.e.
     // evaluates expressions and prints the result.
     interpreter.interpret(statements, printExpressions);
+  }
+
+  static void error(Token token, String message) {
+    report(token, message);
   }
 
   static void error(int line, String message) {

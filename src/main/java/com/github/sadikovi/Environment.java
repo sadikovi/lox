@@ -52,6 +52,27 @@ class Environment {
   }
 
   /**
+   * Returns value for a defined variable at distance or throws a runtime error.
+   */
+  public Object getAt(Token name, int distance) {
+    Environment env = ancestor(distance);
+    if (env != null && env.values.containsKey(name.lexeme)) {
+      Object value = env.values.get(name.lexeme);
+      if (value != NO_INIT) return value;
+      throw new RuntimeError(name, "Variable '" + name.lexeme + "' is not initialised");
+    }
+    throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'");
+  }
+
+  private Environment ancestor(int distance) {
+    Environment env = this;
+    for (int i = 0; i < distance; i++) {
+      env = env.enclosing;
+    }
+    return env;
+  }
+
+  /**
    * Assigns value to an existing variable.
    */
   public void assign(Token name, Object value) {
@@ -64,5 +85,12 @@ class Environment {
       return;
     }
     throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'");
+  }
+
+  /**
+   * Assigns value to an existing variable at distance.
+   */
+  public void assignAt(Token name, Object value, int distance) {
+    ancestor(distance).values.put(name.lexeme, value);
   }
 }
