@@ -32,6 +32,16 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
+  public String visit(Stmt.Break stmt) {
+    return "break;";
+  }
+
+  @Override
+  public String visit(Stmt.Class stmt) {
+    return "class " + stmt.name.lexeme;
+  }
+
+  @Override
   public String visit(Stmt.Expression stmt) {
     return stmt.expression.accept(this);
   }
@@ -86,11 +96,6 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
-  public String visit(Stmt.Break stmt) {
-    return "break;";
-  }
-
-  @Override
   public String visit(Stmt.Var stmt) {
     StringBuilder sb = new StringBuilder();
     sb.append("var " + stmt.name.lexeme);
@@ -102,44 +107,13 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
-  public String visit(Stmt.Class stmt) {
-    return "class";
+  public String visit(Expr.Assign expr) {
+    return expr.name.lexeme + " = " + expr.expression.accept(this);
   }
 
   @Override
   public String visit(Expr.Binary expr) {
     return parenthesize(expr.operator.lexeme, expr.left, expr.right);
-  }
-
-  @Override
-  public String visit(Expr.Grouping expr) {
-    return parenthesize("group", expr.expression);
-  }
-
-  @Override
-  public String visit(Expr.Literal expr) {
-    if (expr.value == null) return "nil";
-    return expr.value.toString();
-  }
-
-  @Override
-  public String visit(Expr.Logical expr) {
-    return "logical";
-  }
-
-  @Override
-  public String visit(Expr.Unary expr) {
-    return parenthesize(expr.operator.lexeme, expr.right);
-  }
-
-  @Override
-  public String visit(Expr.Variable expr) {
-    return parenthesize(expr.name.lexeme);
-  }
-
-  @Override
-  public String visit(Expr.Assign expr) {
-    return expr.name.lexeme + " = " + expr.expression.accept(this);
   }
 
   @Override
@@ -164,13 +138,39 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
-  public String visit(Expr.Set expr) {
-    return expr.object.accept(this) + "." + expr.name.lexeme + " = " + expr.value.accept(this);
+  public String visit(Expr.Grouping expr) {
+    return parenthesize("group", expr.expression);
   }
 
   @Override
   public String visit(Expr.Lambda expr) {
     return "<lambda fn>";
+  }
+
+  @Override
+  public String visit(Expr.Literal expr) {
+    if (expr.value == null) return "nil";
+    return expr.value.toString();
+  }
+
+  @Override
+  public String visit(Expr.Logical expr) {
+    return expr.left.accept(this) + " " + expr.operator.lexeme + " " + expr.right.accept(this);
+  }
+
+  @Override
+  public String visit(Expr.Set expr) {
+    return expr.object.accept(this) + "." + expr.name.lexeme + " = " + expr.value.accept(this);
+  }
+
+  @Override
+  public String visit(Expr.Unary expr) {
+    return parenthesize(expr.operator.lexeme, expr.right);
+  }
+
+  @Override
+  public String visit(Expr.Variable expr) {
+    return parenthesize(expr.name.lexeme);
   }
 
   private String parenthesize(String lexeme, Expr... expressions) {

@@ -51,6 +51,18 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Stmt.Break stmt) {
+    return null;
+  }
+
+  @Override
+  public Void visit(Stmt.Class stmt) {
+    declare(stmt.name);
+    define(stmt.name);
+    return null;
+  }
+
+  @Override
   public Void visit(Stmt.Expression stmt) {
     resolve(stmt.expression);
     return null;
@@ -63,13 +75,6 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     define(stmt.name);
 
     resolveFunction(stmt, FunctionType.FUNCTION);
-    return null;
-  }
-
-  @Override
-  public Void visit(Stmt.Class stmt) {
-    declare(stmt.name);
-    define(stmt.name);
     return null;
   }
 
@@ -109,11 +114,6 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
-  public Void visit(Stmt.Break stmt) {
-    return null;
-  }
-
-  @Override
   public Void visit(Stmt.Var stmt) {
     declare(stmt.name);
     if (stmt.expression != null) {
@@ -125,6 +125,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Expr.Assign expr) {
+    resolve(expr.expression);
+    resolveLocal(expr, expr.name);
+    return null;
+  }
+
+  @Override
   public Void visit(Expr.Binary expr) {
     resolve(expr.left);
     resolve(expr.right);
@@ -132,8 +139,29 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Expr.Call expr) {
+    resolve(expr.callee);
+    for (Expr argument : expr.arguments) {
+      resolve(argument);
+    }
+    return null;
+  }
+
+  @Override
+  public Void visit(Expr.Get expr) {
+    resolve(expr.object);
+    return null;
+  }
+
+  @Override
   public Void visit(Expr.Grouping expr) {
     resolve(expr.expression);
+    return null;
+  }
+
+  @Override
+  public Void visit(Expr.Lambda expr) {
+    resolveFunction(expr.params, expr.body, FunctionType.FUNCTION);
     return null;
   }
 
@@ -146,6 +174,13 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visit(Expr.Logical expr) {
     resolve(expr.left);
     resolve(expr.right);
+    return null;
+  }
+
+  @Override
+  public Void visit(Expr.Set expr) {
+    resolve(expr.value);
+    resolve(expr.object);
     return null;
   }
 
@@ -167,40 +202,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     return null;
   }
 
-  @Override
-  public Void visit(Expr.Assign expr) {
-    resolve(expr.expression);
-    resolveLocal(expr, expr.name);
-    return null;
-  }
-
-  @Override
-  public Void visit(Expr.Call expr) {
-    resolve(expr.callee);
-    for (Expr argument : expr.arguments) {
-      resolve(argument);
-    }
-    return null;
-  }
-
-  @Override
-  public Void visit(Expr.Get expr) {
-    resolve(expr.object);
-    return null;
-  }
-
-  @Override
-  public Void visit(Expr.Set expr) {
-    resolve(expr.value);
-    resolve(expr.object);
-    return null;
-  }
-
-  @Override
-  public Void visit(Expr.Lambda expr) {
-    resolveFunction(expr.params, expr.body, FunctionType.FUNCTION);
-    return null;
-  }
+  // Helper functions.
 
   public void resolve(List<Stmt> statements) {
     for (Stmt statement : statements) {
@@ -227,8 +229,6 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
     // Not found. Assume it is global.
   }
-
-  // Helper functions.
 
   private void resolveFunction(Stmt.Function function, FunctionType type) {
     resolveFunction(function.params, function.body, type);

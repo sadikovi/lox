@@ -57,6 +57,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Stmt.Break stmt) {
+    throw new Break();
+  }
+
+  @Override
+  public Void visit(Stmt.Class stmt) {
+    env.define(stmt.name.lexeme, null);
+    LoxClass klass = new LoxClass(stmt.name.lexeme);
+    env.assign(stmt.name, klass);
+    return null;
+  }
+
+  @Override
   public Void visit(Stmt.Expression stmt) {
     eval(stmt.expression);
     return null;
@@ -66,14 +79,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   public Void visit(Stmt.Function stmt) {
     LoxFunction function = new LoxFunction(stmt.name, stmt.params, stmt.body, env);
     env.define(stmt.name.lexeme, function);
-    return null;
-  }
-
-  @Override
-  public Void visit(Stmt.Class stmt) {
-    env.define(stmt.name.lexeme, null);
-    LoxClass klass = new LoxClass(stmt.name.lexeme);
-    env.assign(stmt.name, klass);
     return null;
   }
 
@@ -117,11 +122,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
-  public Void visit(Stmt.Break stmt) {
-    throw new Break();
-  }
-
-  @Override
   public Void visit(Stmt.Var stmt) {
     if (stmt.expression != null) {
       env.define(stmt.name.lexeme, eval(stmt.expression));
@@ -129,6 +129,19 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
       env.define(stmt.name.lexeme);
     }
     return null;
+  }
+
+  @Override
+  public Object visit(Expr.Assign expr) {
+    Object value = eval(expr.expression);
+
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      env.assignAt(expr.name, value, distance);
+    } else {
+      globals.assign(expr.name, value);
+    }
+    return value;
   }
 
   @Override
@@ -189,62 +202,6 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
-  public Object visit(Expr.Grouping expr) {
-    return eval(expr.expression);
-  }
-
-  @Override
-  public Object visit(Expr.Literal expr) {
-    return expr.value;
-  }
-
-  @Override
-  public Object visit(Expr.Logical expr) {
-    Object left = eval(expr.left);
-    if (expr.operator.type == TokenType.OR) {
-      if (isTruthy(left)) return left;
-    } else {
-      if (!isTruthy(left)) return left;
-    }
-    return eval(expr.right);
-  }
-
-  @Override
-  public Object visit(Expr.Unary expr) {
-    Object result = eval(expr.right);
-    Token token = expr.operator;
-
-    switch (token.type) {
-      case BANG:
-        return !isTruthy(result);
-      case MINUS:
-        return -getNumber(token, result);
-      case PLUS:
-        return getNumber(token, result);
-      default:
-        throw new RuntimeError(token, "Unreachable");
-    }
-  }
-
-  @Override
-  public Object visit(Expr.Variable expr) {
-    return lookupVariable(expr.name, expr);
-  }
-
-  @Override
-  public Object visit(Expr.Assign expr) {
-    Object value = eval(expr.expression);
-
-    Integer distance = locals.get(expr);
-    if (distance != null) {
-      env.assignAt(expr.name, value, distance);
-    } else {
-      globals.assign(expr.name, value);
-    }
-    return value;
-  }
-
-  @Override
   public Object visit(Expr.Call expr) {
     Object callee = eval(expr.callee);
 
@@ -277,6 +234,32 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Object visit(Expr.Grouping expr) {
+    return eval(expr.expression);
+  }
+
+  @Override
+  public Object visit(Expr.Lambda expr) {
+    return new LoxFunction(null, expr.params, expr.body, env);
+  }
+
+  @Override
+  public Object visit(Expr.Literal expr) {
+    return expr.value;
+  }
+
+  @Override
+  public Object visit(Expr.Logical expr) {
+    Object left = eval(expr.left);
+    if (expr.operator.type == TokenType.OR) {
+      if (isTruthy(left)) return left;
+    } else {
+      if (!isTruthy(left)) return left;
+    }
+    return eval(expr.right);
+  }
+
+  @Override
   public Void visit(Expr.Set expr) {
     Object object = eval(expr.object);
 
@@ -292,8 +275,25 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
-  public Object visit(Expr.Lambda expr) {
-    return new LoxFunction(null, expr.params, expr.body, env);
+  public Object visit(Expr.Unary expr) {
+    Object result = eval(expr.right);
+    Token token = expr.operator;
+
+    switch (token.type) {
+      case BANG:
+        return !isTruthy(result);
+      case MINUS:
+        return -getNumber(token, result);
+      case PLUS:
+        return getNumber(token, result);
+      default:
+        throw new RuntimeError(token, "Unreachable");
+    }
+  }
+
+  @Override
+  public Object visit(Expr.Variable expr) {
+    return lookupVariable(expr.name, expr);
   }
 
   /** Executes list of statements in provided environment */
