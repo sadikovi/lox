@@ -164,3 +164,19 @@ fun func3() {
 
 func1();
 func2();
+
+print "Example 11";
+
+class MyClass {
+  method() {
+    return 10;
+  }
+}
+
+print MyClass;
+
+var a = MyClass();
+print a;
+
+a.prop = "field value";
+print a.prop;
