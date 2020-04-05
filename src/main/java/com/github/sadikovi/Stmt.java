@@ -28,6 +28,21 @@ abstract class Stmt {
     }
   }
 
+  static class Class extends Stmt {
+    final Token name;
+    final List<Function> methods;
+
+    Class(Token name, List<Function> methods) {
+      this.name = name;
+      this.methods = methods;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Expression extends Stmt {
     final Expr expression;
 
@@ -139,6 +154,7 @@ abstract class Stmt {
   interface Visitor<R> {
     R visit(Block stmt);
     R visit(Break stmt);
+    R visit(Class stmt);
     R visit(Expression stmt);
     R visit(Function stmt);
     R visit(If stmt);

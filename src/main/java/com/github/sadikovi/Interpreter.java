@@ -70,6 +70,14 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visit(Stmt.Class stmt) {
+    env.define(stmt.name.lexeme, null);
+    LoxClass klass = new LoxClass(stmt.name.lexeme);
+    env.assign(stmt.name, klass);
+    return null;
+  }
+
+  @Override
   public Void visit(Stmt.If stmt) {
     if (isTruthy(eval(stmt.condition))) {
       stmt.thenBranch.accept(this);
@@ -257,6 +265,30 @@ class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     return function.call(this, arguments);
+  }
+
+  @Override
+  public Object visit(Expr.Get expr) {
+    Object object = eval(expr.object);
+    if (object instanceof LoxInstance) {
+      return ((LoxInstance) object).get(expr.name);
+    }
+    throw new RuntimeError(expr.name, "Only instances have properties");
+  }
+
+  @Override
+  public Void visit(Expr.Set expr) {
+    Object object = eval(expr.object);
+
+    if (!(object instanceof LoxInstance)) {
+      throw new RuntimeError(expr.name, "Only instances have fields");
+    }
+
+    Object value = eval(expr.value);
+
+    ((LoxInstance) object).set(expr.name, value);
+
+    return null;
   }
 
   @Override

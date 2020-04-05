@@ -10,7 +10,8 @@ import static com.github.sadikovi.TokenType.*;
  * Parser for Lox grammar.
  *
  * program        -> declaration* EOF ;
- * declaration    -> funDecl
+ * declaration    -> classDecl
+ *                | funDecl
  *                | varDecl
  *                | statement ;
  * varDecl        -> "var" IDENTIFIER ( "=" expression )? ";" ;
@@ -35,9 +36,10 @@ import static com.github.sadikovi.TokenType.*;
  * function       -> IDENTIFIER "(" parameters? ")" "{" block "}" ;
  * parameters     -> IDENTIFIER ( "," IDENTIFIER )* ;
  * returnStmt     -> "return" expression? ";" ;
+ * classDecl      -> "class" IDENTIFIER "{" (function)* "}" ;
  *
  * expression     -> assignment ;
- * assignment     -> IDENTIFIER "=" assignment
+ * assignment     -> ( call "." )? IDENTIFIER "=" assignment
  *                | lambda
  *                | logic_or ;
  * logic_or       -> logic_and ( "or" logic_and )* ;
@@ -49,7 +51,7 @@ import static com.github.sadikovi.TokenType.*;
  * unary          -> ( "!" | "-" ) unary
  *                | call
  *                | primary ;
- * call           -> primary ( "(" arguments? ")" )* ;
+ * call           -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
  * primary        -> NUMBER | STRING | "false" | "true" | "nil"
  *                | "(" expression ")"
  *                | IDENTIFIER ;
@@ -136,6 +138,10 @@ class Parser {
 
   private Stmt declaration() {
     try {
+      if (check(CLASS)) {
+        advance();
+        return classDeclaration();
+      }
       if (check(FUN)) {
         advance();
         return function("function");
@@ -151,7 +157,25 @@ class Parser {
     }
   }
 
-  private Stmt function(String kind) {
+  private Stmt classDeclaration() {
+    if (!check(IDENTIFIER)) throw error(peek(), "Expected class name");
+    Token name = peekAndAdvance();
+
+    if (!check(LEFT_BRACE)) throw error(peek(), "Expected '{' after class name");
+    advance();
+
+    List<Stmt.Function> methods = new ArrayList<Stmt.Function>();
+    while (!check(RIGHT_BRACE) && !isAtEnd()) {
+      methods.add(function("method"));
+    }
+
+    if (!check(RIGHT_BRACE)) throw error(peek(), "Expected '}' after class body");
+    advance();
+
+    return new Stmt.Class(name, methods);
+  }
+
+  private Stmt.Function function(String kind) {
     if (!check(IDENTIFIER)) throw error(peek(), "Expected " + kind + " name");
     Token name = peekAndAdvance();
 
@@ -376,6 +400,9 @@ class Parser {
       if (expr instanceof Expr.Variable) {
         Token name = ((Expr.Variable) expr).name;
         return new Expr.Assign(name, value);
+      } else if (expr instanceof Expr.Get) {
+        Expr.Get get = (Expr.Get) expr;
+        return new Expr.Set(get.object, get.name, value);
       }
 
       error(equals, "Invalid assignment target");
@@ -500,27 +527,38 @@ class Parser {
 
   private Expr call() {
     Expr expr = primary();
-    while (check(LEFT_PAREN) && !isAtEnd()) {
-      advance();
+    while (!isAtEnd()) {
+      if (check(LEFT_PAREN)) {
+        advance();
 
-      List<Expr> arguments = new ArrayList<Expr>();
+        List<Expr> arguments = new ArrayList<Expr>();
 
-      if (!check(RIGHT_PAREN)) {
-        // parse arguments
-        while (true) {
-          if (arguments.size() >= 255) {
-            error(peek(), "Cannot have more than 255 arguments");
+        if (!check(RIGHT_PAREN)) {
+          // parse arguments
+          while (true) {
+            if (arguments.size() >= 255) {
+              error(peek(), "Cannot have more than 255 arguments");
+            }
+            arguments.add(expression());
+            if (!check(COMMA)) break;
+            advance();
           }
-          arguments.add(expression());
-          if (!check(COMMA)) break;
-          advance();
         }
+
+        if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after function call");
+        Token paren = peekAndAdvance();
+
+        expr = new Expr.Call(expr, paren, arguments);
+      } else if (check(DOT)) {
+        advance();
+
+        if (!check(IDENTIFIER)) throw error(peek(), "Expected an identifier");
+        Token name = peekAndAdvance();
+
+        expr = new Expr.Get(expr, name);
+      } else {
+        break;
       }
-
-      if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after function call");
-      Token paren = peekAndAdvance();
-
-      expr = new Expr.Call(expr, paren, arguments);
     }
     return expr;
   }

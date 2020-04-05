@@ -102,6 +102,11 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   }
 
   @Override
+  public String visit(Stmt.Class stmt) {
+    return "class";
+  }
+
+  @Override
   public String visit(Expr.Binary expr) {
     return parenthesize(expr.operator.lexeme, expr.left, expr.right);
   }
@@ -151,6 +156,16 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
     }
     sb.append(")");
     return sb.toString();
+  }
+
+  @Override
+  public String visit(Expr.Get expr) {
+    return expr.object.accept(this) + "." + expr.name.lexeme;
+  }
+
+  @Override
+  public String visit(Expr.Set expr) {
+    return expr.object.accept(this) + "." + expr.name.lexeme + " = " + expr.value.accept(this);
   }
 
   @Override

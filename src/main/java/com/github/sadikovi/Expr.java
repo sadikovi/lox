@@ -55,6 +55,21 @@ abstract class Expr {
     }
   }
 
+  static class Get extends Expr {
+    final Expr object;
+    final Token name;
+
+    Get(Expr object, Token name) {
+      this.object = object;
+      this.name = name;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Grouping extends Expr {
     final Expr expression;
 
@@ -113,6 +128,23 @@ abstract class Expr {
     }
   }
 
+  static class Set extends Expr {
+    final Expr object;
+    final Token name;
+    final Expr value;
+
+    Set(Expr object, Token name, Expr value) {
+      this.object = object;
+      this.name = name;
+      this.value = value;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Unary extends Expr {
     final Token operator;
     final Expr right;
@@ -150,10 +182,12 @@ abstract class Expr {
     R visit(Assign expr);
     R visit(Binary expr);
     R visit(Call expr);
+    R visit(Get expr);
     R visit(Grouping expr);
     R visit(Lambda expr);
     R visit(Literal expr);
     R visit(Logical expr);
+    R visit(Set expr);
     R visit(Unary expr);
     R visit(Variable expr);
   }
