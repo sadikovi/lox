@@ -3,17 +3,32 @@ package com.github.sadikovi;
 import java.util.List;
 import java.util.Map;
 
-class LoxClass implements LoxCallable {
+class LoxClass implements LoxCallable, LoxGetter {
   final String name;
   final Map<String, LoxFunction> methods;
+  final Map<String, LoxFunction> classMethods;
 
-  LoxClass(String name, Map<String, LoxFunction> methods) {
+  LoxClass(String name, Map<String, LoxFunction> methods, Map<String, LoxFunction> classMethods) {
     this.name = name;
     this.methods = methods;
+    this.classMethods = classMethods;
+  }
+
+  public LoxFunction findClassMethod(String name) {
+    return classMethods.get(name);
   }
 
   public LoxFunction findMethod(String name) {
     return methods.get(name);
+  }
+
+  @Override
+  public Object get(Token name) {
+    if (classMethods.containsKey(name.lexeme)) {
+      return classMethods.get(name.lexeme);
+    }
+
+    throw new RuntimeError(name, "Undefined class method '" + name.lexeme + "'");
   }
 
   @Override

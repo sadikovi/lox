@@ -3,7 +3,7 @@ package com.github.sadikovi;
 import java.util.HashMap;
 import java.util.Map;
 
-class LoxInstance {
+class LoxInstance implements LoxGetter {
   final LoxClass klass;
   final Map<String, Object> fields = new HashMap<String, Object>();
 
@@ -11,6 +11,7 @@ class LoxInstance {
     this.klass = klass;
   }
 
+  @Override
   public Object get(Token name) {
     if (fields.containsKey(name.lexeme)) {
       return fields.get(name.lexeme);

@@ -239,3 +239,18 @@ fun method() {
 
 method();
 */
+
+print "Example 13";
+
+class Math {
+  class square(n) {
+    return n * n;
+  }
+
+  class add(a, b) {
+    return a + b;
+  }
+}
+
+print Math.square(3); // Prints "9".
+print Math.add(1, 2); // Prints "3".

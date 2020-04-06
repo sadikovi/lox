@@ -166,14 +166,20 @@ class Parser {
     advance();
 
     List<Stmt.Function> methods = new ArrayList<Stmt.Function>();
+    List<Stmt.Function> classMethods = new ArrayList<Stmt.Function>();
     while (!check(RIGHT_BRACE) && !isAtEnd()) {
-      methods.add(function("method"));
+      if (check(CLASS)) {
+        advance();
+        classMethods.add(function("class method"));
+      } else {
+        methods.add(function("method"));
+      }
     }
 
     if (!check(RIGHT_BRACE)) throw error(peek(), "Expected '}' after class body");
     advance();
 
-    return new Stmt.Class(name, methods);
+    return new Stmt.Class(name, methods, classMethods);
   }
 
   private Stmt.Function function(String kind) {

@@ -35,6 +35,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private enum FunctionType {
     NONE,
+    CLASS_METHOD,
     FUNCTION,
     INITIALIZER,
     METHOD
@@ -72,6 +73,12 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     define(stmt.name);
 
     beginScope();
+
+    for (Stmt.Function method : stmt.classMethods) {
+      FunctionType declaration = FunctionType.CLASS_METHOD;
+      resolveFunction(method, declaration);
+    }
+
     scopes.peek().put("this", new State(stmt.name).markDefined().markUsed()); // pass class token
 
     for (Stmt.Function method : stmt.methods) {
@@ -218,6 +225,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visit(Expr.This expr) {
     if (currentClass == ClassType.NONE) {
       Lox.error(expr.keyword, "Cannot use 'this' outside of a class");
+    }
+    if (currentFunction == FunctionType.CLASS_METHOD) {
+      Lox.error(expr.keyword, "Cannot use 'this' inside a class method");
     }
     resolveLocal(expr, expr.keyword);
     return null;
