@@ -145,6 +145,19 @@ abstract class Expr {
     }
   }
 
+  static class This extends Expr {
+    final Token keyword;
+
+    This(Token keyword) {
+      this.keyword = keyword;
+    }
+
+    @Override
+    public <R> R accept(Visitor<R> visitor) {
+      return visitor.visit(this);
+    }
+  }
+
   static class Unary extends Expr {
     final Token operator;
     final Expr right;
@@ -188,6 +201,7 @@ abstract class Expr {
     R visit(Literal expr);
     R visit(Logical expr);
     R visit(Set expr);
+    R visit(This expr);
     R visit(Unary expr);
     R visit(Variable expr);
   }

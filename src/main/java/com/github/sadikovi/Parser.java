@@ -54,6 +54,7 @@ import static com.github.sadikovi.TokenType.*;
  * call           -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
  * primary        -> NUMBER | STRING | "false" | "true" | "nil"
  *                | "(" expression ")"
+ *                | "this"
  *                | IDENTIFIER ;
  * arguments      -> expression ( "," expresssion )* ;
  */
@@ -580,6 +581,10 @@ class Parser {
     if (check(NIL)) {
       advance();
       return new Expr.Literal(null);
+    }
+
+    if (check(THIS)) {
+      return new Expr.This(peekAndAdvance());
     }
 
     if (check(IDENTIFIER)) {

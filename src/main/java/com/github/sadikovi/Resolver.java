@@ -10,6 +10,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   private final LinkedList<Map<String, State>> scopes;
   private final Interpreter interpreter;
   private FunctionType currentFunction = FunctionType.NONE;
+  private ClassType currentClass = ClassType.NONE;
 
   /** Variable scope state, state is added when a variable is declared  */
   private static class State {
@@ -38,6 +39,11 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     METHOD
   }
 
+  private enum ClassType {
+    NONE,
+    CLASS
+  }
+
   Resolver(Interpreter interpreter) {
     this.scopes = new LinkedList<Map<String, State>>();
     this.interpreter = interpreter;
@@ -58,12 +64,22 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visit(Stmt.Class stmt) {
+    ClassType enclosing = currentClass;
+    currentClass = ClassType.CLASS;
+
     declare(stmt.name);
     define(stmt.name);
+
+    beginScope();
+    scopes.peek().put("this", new State(stmt.name).markDefined().markUsed()); // pass class token
 
     for (Stmt.Function method : stmt.methods) {
       resolveFunction(method, FunctionType.METHOD);
     }
+
+    endScope();
+
+    currentClass = enclosing;
 
     return null;
   }
@@ -187,6 +203,15 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public Void visit(Expr.Set expr) {
     resolve(expr.value);
     resolve(expr.object);
+    return null;
+  }
+
+  @Override
+  public Void visit(Expr.This expr) {
+    if (currentClass == ClassType.NONE) {
+      Lox.error(expr.keyword, "Cannot use 'this' outside of a class");
+    }
+    resolveLocal(expr, expr.keyword);
     return null;
   }
 
