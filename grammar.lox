@@ -180,3 +180,62 @@ print a;
 
 a.prop = "field value";
 print a.prop;
+
+print "Example 12";
+
+class MyClass {
+  func() {
+    return "a: " + this.a + ", b: " + this.b;
+  }
+}
+
+class MyClass2 {
+  func() {
+    return 123;
+  }
+
+  func2() {
+    this.prop = "hello";
+    return -1;
+  }
+
+  func3() {
+    return this.prop;
+  }
+}
+
+class Test {
+  init(a, b, c) {
+    print a + ", " + b + ", " + c;
+    this.a = a;
+    this.b = b;
+    this.c = c;
+  }
+}
+
+var m = MyClass();
+m.a = "1";
+m.b = 2;
+print m.func();
+
+var m = MyClass2();
+print m.func();
+print m.func2();
+print m.func3();
+
+var t = Test(1, 2, 3);
+print t.a;
+print t.b;
+print t.c;
+
+print t.init(2, 3, 4);
+
+/*
+print this;
+
+fun method() {
+  print this;
+}
+
+method();
+*/

@@ -11,12 +11,19 @@ class LoxFunction implements LoxCallable {
   final List<Token> params;
   final List<Stmt> body;
   final Environment closure;
+  final boolean isInitializer;
 
-  LoxFunction(Token name, List<Token> params, List<Stmt> body, Environment closure) {
+  LoxFunction(
+      Token name,
+      List<Token> params,
+      List<Stmt> body,
+      Environment closure,
+      boolean isInitializer) {
     this.name = name; // can be null for anonymous functions
     this.params = params;
     this.body = body;
     this.closure = closure;
+    this.isInitializer = isInitializer;
   }
 
   /** Returns true if this function is a lambda function */
@@ -27,7 +34,7 @@ class LoxFunction implements LoxCallable {
   public LoxFunction bind(LoxInstance instance) {
     Environment env = new Environment(closure);
     env.define("this", instance);
-    return new LoxFunction(name, params, body, env);
+    return new LoxFunction(name, params, body, env, isInitializer);
   }
 
   @Override
@@ -47,8 +54,12 @@ class LoxFunction implements LoxCallable {
     try {
       interpreter.executeBlock(body, env);
     } catch (Interpreter.Return returnValue) {
+      if (isInitializer) return closure.getAt("this", 0);
       return returnValue.value;
     }
+
+    if (isInitializer) return closure.getAt("this", 0);
+
     return null;
   }
 

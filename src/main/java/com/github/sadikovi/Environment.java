@@ -54,14 +54,12 @@ class Environment {
   /**
    * Returns value for a defined variable at distance or throws a runtime error.
    */
+  public Object getAt(String name, int distance) {
+    return ancestor(distance).values.get(name);
+  }
+
   public Object getAt(Token name, int distance) {
-    Environment env = ancestor(distance);
-    if (env != null && env.values.containsKey(name.lexeme)) {
-      Object value = env.values.get(name.lexeme);
-      if (value != NO_INIT) return value;
-      throw new RuntimeError(name, "Variable '" + name.lexeme + "' is not initialised");
-    }
-    throw new RuntimeError(name, "Undefined variable '" + name.lexeme + "'");
+    return getAt(name.lexeme, distance);
   }
 
   private Environment ancestor(int distance) {
