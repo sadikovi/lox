@@ -186,24 +186,27 @@ class Parser {
     if (!check(IDENTIFIER)) throw error(peek(), "Expected " + kind + " name");
     Token name = peekAndAdvance();
 
-    if (!check(LEFT_PAREN)) throw error(peek(), "Expected '(' after " + kind + " name");
-    advance();
+    List<Token> params = null;
 
-    List<Token> params = new ArrayList<Token>();
-    if (!check(RIGHT_PAREN)) {
-      while (true) {
-        if (params.size() >= 255) {
-          error(peek(), "Cannot have more than 255 parameters");
+    if (check(LEFT_PAREN)) {
+      advance();
+
+      params = new ArrayList<Token>();
+      if (!check(RIGHT_PAREN)) {
+        while (true) {
+          if (params.size() >= 255) {
+            error(peek(), "Cannot have more than 255 parameters");
+          }
+          if (!check(IDENTIFIER)) throw error(peek(), "Expected parameter name");
+          params.add(peekAndAdvance());
+          if (!check(COMMA)) break;
+          advance();
         }
-        if (!check(IDENTIFIER)) throw error(peek(), "Expected parameter name");
-        params.add(peekAndAdvance());
-        if (!check(COMMA)) break;
-        advance();
       }
-    }
 
-    if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after " + kind + " parameters");
-    advance();
+      if (!check(RIGHT_PAREN)) throw error(peek(), "Expected ')' after " + kind + " parameters");
+      advance();
+    }
 
     if (!check(LEFT_BRACE)) throw error(peek(), "Expected '{' before " + kind + " body");
     advance();
@@ -394,8 +397,7 @@ class Parser {
 
   private Expr assignment() {
     if (check(FUN)) {
-      advance();
-      return lambdaExpression();
+      return lambdaExpression(peekAndAdvance());
     }
 
     Expr expr = or();
@@ -418,7 +420,7 @@ class Parser {
     return expr;
   }
 
-  private Expr lambdaExpression() {
+  private Expr lambdaExpression(Token keyword) {
     if (!check(LEFT_PAREN)) throw error(peek(), "Expected '(' after function");
     advance();
 
@@ -443,7 +445,7 @@ class Parser {
 
     List<Stmt> body = block();
 
-    return new Expr.Lambda(params, body);
+    return new Expr.Lambda(keyword, params, body);
   }
 
   private Expr or() {

@@ -20,7 +20,7 @@ class LoxFunction implements LoxCallable {
       Environment closure,
       boolean isInitializer) {
     this.name = name; // can be null for anonymous functions
-    this.params = params;
+    this.params = params; // can be null for getters
     this.body = body;
     this.closure = closure;
     this.isInitializer = isInitializer;
@@ -31,6 +31,11 @@ class LoxFunction implements LoxCallable {
     return name == null;
   }
 
+  /** Returns true if this function is a getter function */
+  public boolean isGetter() {
+    return params == null;
+  }
+
   public LoxFunction bind(LoxInstance instance) {
     Environment env = new Environment(closure);
     env.define("this", instance);
@@ -39,16 +44,18 @@ class LoxFunction implements LoxCallable {
 
   @Override
   public int arity() {
-    return params.size();
+    return (params == null) ? 0 : params.size();
   }
 
   @Override
   public Object call(Interpreter interpreter, List<Object> arguments) {
     Environment env = new Environment(closure);
-    for (int i = 0; i < params.size(); i++) {
-      String param = params.get(i).lexeme;
-      Object value = arguments.get(i);
-      env.define(param, value);
+    if (params != null) {
+      for (int i = 0; i < params.size(); i++) {
+        String param = params.get(i).lexeme;
+        Object value = arguments.get(i);
+        env.define(param, value);
+      }
     }
 
     try {
@@ -71,14 +78,20 @@ class LoxFunction implements LoxCallable {
     } else {
       sb.append("<fn " + name.lexeme);
     }
-    sb.append(" (");
-    for (int i = 0; i < params.size(); i++) {
-      sb.append(params.get(i).lexeme);
-      if (i < params.size() - 1) {
-        sb.append(", ");
+
+    if (isGetter()) {
+      sb.append(" # getter>");
+    } else {
+      sb.append(" (");
+      for (int i = 0; i < params.size(); i++) {
+        sb.append(params.get(i).lexeme);
+        if (i < params.size() - 1) {
+          sb.append(", ");
+        }
       }
+      sb.append(")>");
     }
-    sb.append(")>");
+
     return sb.toString();
   }
 }

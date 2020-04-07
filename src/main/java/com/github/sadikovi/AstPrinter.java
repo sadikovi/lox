@@ -50,14 +50,18 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
   public String visit(Stmt.Function stmt) {
     StringBuilder sb = new StringBuilder();
     sb.append("fun " + stmt.name.lexeme);
-    sb.append("(");
-    for (int i = 0; i < stmt.params.size(); i++) {
-      sb.append(stmt.params.get(i).lexeme);
-      if (i < stmt.params.size() - 1) {
-        sb.append(", ");
+    if (stmt.params != null) {
+      sb.append("(");
+      for (int i = 0; i < stmt.params.size(); i++) {
+        sb.append(stmt.params.get(i).lexeme);
+        if (i < stmt.params.size() - 1) {
+          sb.append(", ");
+        }
       }
+      sb.append(")");
+    } else {
+      sb.append(" <getter>");
     }
-    sb.append(")");
     return sb.toString();
   }
 

@@ -139,7 +139,7 @@ c();
 
 // fun () {};
 
-print "Example 10";
+print "## Example 10";
 
 fun func1() {
   var a = 1;
@@ -165,7 +165,7 @@ fun func3() {
 func1();
 func2();
 
-print "Example 11";
+print "## Example 11";
 
 class MyClass {
   method() {
@@ -181,7 +181,7 @@ print a;
 a.prop = "field value";
 print a.prop;
 
-print "Example 12";
+print "## Example 12";
 
 class MyClass {
   func() {
@@ -240,7 +240,7 @@ fun method() {
 method();
 */
 
-print "Example 13";
+print "## Example 13";
 
 class Math {
   class square(n) {
@@ -254,3 +254,42 @@ class Math {
 
 print Math.square(3); // Prints "9".
 print Math.add(1, 2); // Prints "3".
+
+print "## Example 14";
+
+class Circle {
+  init(radius) {
+    this.radius = radius;
+  }
+
+  area() {
+    return 0;
+  }
+
+  area {
+    return 3.141592653 * this.radius * this.radius;
+  }
+}
+
+var circle = Circle(4);
+print circle.area; // Prints roughly "50.2655".
+circle.area = 1;
+print circle.area; // Prints "1".
+
+class Circle {
+  init(radius) {
+    this.radius = radius;
+  }
+
+  area {
+    return 3.141592653 * this.radius * this.radius;
+  }
+
+  area() {
+    return 0;
+  }
+}
+
+var circle = Circle(4);
+print circle.area; // Prints function.
+print circle.area(); // Prints 0.

@@ -37,6 +37,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     NONE,
     CLASS_METHOD,
     FUNCTION,
+    GETTER,
     INITIALIZER,
     METHOD
   }
@@ -85,6 +86,9 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
       FunctionType declaration = FunctionType.METHOD;
       if (method.name.lexeme.equals("init")) {
         declaration = FunctionType.INITIALIZER;
+      }
+      if (method.params == null) {
+        declaration = FunctionType.GETTER;
       }
       resolveFunction(method, declaration);
     }
@@ -198,7 +202,7 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visit(Expr.Lambda expr) {
-    resolveFunction(expr.params, expr.body, FunctionType.FUNCTION);
+    resolveFunction(expr.keyword, expr.params, expr.body, FunctionType.FUNCTION);
     return null;
   }
 
@@ -280,17 +284,24 @@ class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   private void resolveFunction(Stmt.Function function, FunctionType type) {
-    resolveFunction(function.params, function.body, type);
+    resolveFunction(function.name, function.params, function.body, type);
   }
 
-  private void resolveFunction(List<Token> params, List<Stmt> body, FunctionType type) {
+  private void resolveFunction(Token name, List<Token> params, List<Stmt> body, FunctionType type) {
     FunctionType enclosing = currentFunction;
     currentFunction = type;
     try {
       beginScope();
-      for (Token param : params) {
-        declare(param);
-        define(param);
+
+      if (params == null && currentFunction != FunctionType.GETTER) {
+        Lox.error(name, "Is not a getter method");
+      }
+
+      if (params != null) {
+        for (Token param : params) {
+          declare(param);
+          define(param);
+        }
       }
       resolve(body);
       endScope();
