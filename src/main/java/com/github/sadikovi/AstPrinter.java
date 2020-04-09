@@ -38,7 +38,8 @@ class AstPrinter implements Expr.Visitor<String>, Stmt.Visitor<String> {
 
   @Override
   public String visit(Stmt.Class stmt) {
-    return "class " + stmt.name.lexeme;
+    String superclass = stmt.superclass != null ? (" < " + stmt.superclass.name.lexeme) : "";
+    return "class " + stmt.name.lexeme + superclass;
   }
 
   @Override

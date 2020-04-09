@@ -5,30 +5,48 @@ import java.util.Map;
 
 class LoxClass implements LoxCallable, LoxGetter {
   final String name;
+  final LoxClass superclass;
   final Map<String, LoxFunction> methods;
   final Map<String, LoxFunction> classMethods;
 
-  LoxClass(String name, Map<String, LoxFunction> methods, Map<String, LoxFunction> classMethods) {
+  LoxClass(
+      String name,
+      LoxClass superclass,
+      Map<String, LoxFunction> methods,
+      Map<String, LoxFunction> classMethods) {
     this.name = name;
+    this.superclass = superclass;
     this.methods = methods;
     this.classMethods = classMethods;
   }
 
   public LoxFunction findClassMethod(String name) {
-    return classMethods.get(name);
+    if (classMethods.containsKey(name)) {
+      return classMethods.get(name);
+    }
+    if (superclass != null) {
+      return superclass.findClassMethod(name);
+    }
+    return null;
   }
 
   public LoxFunction findMethod(String name) {
-    return methods.get(name);
+    if (methods.containsKey(name)) {
+      return methods.get(name);
+    }
+    if (superclass != null) {
+      return superclass.findMethod(name);
+    }
+    return null;
   }
 
   @Override
   public Object get(Token name) {
-    if (classMethods.containsKey(name.lexeme)) {
-      return classMethods.get(name.lexeme);
+    LoxFunction method = findClassMethod(name.lexeme);
+    if (method == null) {
+      throw new RuntimeError(name, "Undefined class method '" + name.lexeme + "'");
     }
-
-    throw new RuntimeError(name, "Undefined class method '" + name.lexeme + "'");
+    return method;
   }
 
   @Override

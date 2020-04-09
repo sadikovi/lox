@@ -36,7 +36,7 @@ import static com.github.sadikovi.TokenType.*;
  * function       -> IDENTIFIER "(" parameters? ")" "{" block "}" ;
  * parameters     -> IDENTIFIER ( "," IDENTIFIER )* ;
  * returnStmt     -> "return" expression? ";" ;
- * classDecl      -> "class" IDENTIFIER "{" (function)* "}" ;
+ * classDecl      -> "class" IDENTIFIER ( "<" IDENTIFIER )? "{" (function)* "}" ;
  *
  * expression     -> assignment ;
  * assignment     -> ( call "." )? IDENTIFIER "=" assignment
@@ -162,6 +162,13 @@ class Parser {
     if (!check(IDENTIFIER)) throw error(peek(), "Expected class name");
     Token name = peekAndAdvance();
 
+    Expr.Variable superclass = null;
+    if (check(LESS)) {
+      advance();
+
+      superclass = new Expr.Variable(peekAndAdvance());
+    }
+
     if (!check(LEFT_BRACE)) throw error(peek(), "Expected '{' after class name");
     advance();
 
@@ -179,7 +186,7 @@ class Parser {
     if (!check(RIGHT_BRACE)) throw error(peek(), "Expected '}' after class body");
     advance();
 
-    return new Stmt.Class(name, methods, classMethods);
+    return new Stmt.Class(name, superclass, methods, classMethods);
   }
 
   private Stmt.Function function(String kind) {
