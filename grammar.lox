@@ -293,3 +293,81 @@ class Circle {
 var circle = Circle(4);
 print circle.area; // Prints function.
 print circle.area(); // Prints 0.
+
+print "## Example 15";
+
+class B {
+  class method_b() {
+    return "class method B";
+  }
+
+  func() {
+    return "method B";
+  }
+}
+
+class A < B {
+  class method_a() {
+    return "class method A";
+  }
+
+  func2() {
+    return "method A";
+  }
+}
+
+var a = A();
+print a.func();
+print a.func2();
+
+print A.method_a();
+print A.method_b();
+
+class Doughnut {
+  cook() {
+    print "Fry until golden brown.";
+  }
+}
+
+class BostonCream < Doughnut {
+  cook() {
+    super.cook();
+    print "Pipe full of custard and coat with chocolate.";
+  }
+}
+
+BostonCream().cook();
+
+class A {
+  method() {
+    print "A method";
+  }
+}
+
+class B < A {
+  method() {
+    print "B method";
+  }
+
+  test() {
+    super.method();
+  }
+}
+
+class C < B {}
+
+C().test();
+
+/*
+class Eclair {
+  cook() {
+    super.cook();
+    print "Pipe full of crème pâtissière.";
+  }
+}
+
+var a = Eclair();
+a.cook();
+
+super.notEvenInAClass();
+*/
