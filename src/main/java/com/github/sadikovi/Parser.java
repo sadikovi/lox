@@ -54,8 +54,9 @@ import static com.github.sadikovi.TokenType.*;
  * call           -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
  * primary        -> NUMBER | STRING | "false" | "true" | "nil"
  *                | "(" expression ")"
+ *                | IDENTIFIER
  *                | "this"
- *                | IDENTIFIER ;
+ *                | "super" "." IDENTIFIER ;
  * arguments      -> expression ( "," expresssion )* ;
  */
 class Parser {
@@ -596,6 +597,15 @@ class Parser {
     if (check(NIL)) {
       advance();
       return new Expr.Literal(null);
+    }
+
+    if (check(SUPER)) {
+      Token keyword = peekAndAdvance();
+      if (!check(DOT)) throw error(peek(), "Expected '.' after 'super'");
+      advance();
+      if (!check(IDENTIFIER)) throw error(peek(), "Expected superclass method name");
+      Token method = peekAndAdvance();
+      return new Expr.Super(keyword, method);
     }
 
     if (check(THIS)) {

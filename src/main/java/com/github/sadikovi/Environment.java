@@ -10,7 +10,7 @@ class Environment {
   // Sentinel value to mark variables as uninitialised
   private static final Object NO_INIT = new Object();
 
-  private final Environment enclosing; // parent environment
+  final Environment enclosing; // parent environment
   private final Map<String, Object> values = new HashMap<String, Object>();
 
   Environment() {
