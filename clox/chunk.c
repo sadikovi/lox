@@ -51,8 +51,8 @@ void writeConstant(Chunk* chunk, Value value, int line) {
   } else {
     // we have to write constant index as 24-bit number
     writeChunk(chunk, OP_CONSTANT_LONG, line);
-    writeChunk(chunk, constant & 0x7, line);
-    writeChunk(chunk, (constant >> 8) & 0x7, line);
-    writeChunk(chunk, (constant >> 16) & 0x7, line);
+    writeChunk(chunk, constant & 0xff, line);
+    writeChunk(chunk, (constant >> 8) & 0xff, line);
+    writeChunk(chunk, (constant >> 16) & 0xff, line);
   }
 }
