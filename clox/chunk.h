@@ -5,7 +5,8 @@
 #include "value.h"
 
 typedef enum {
-  OP_CONSTANT,
+  OP_CONSTANT, // stores 8-bit operand in the next byte
+  OP_CONSTANT_LONG, // stores 24-bit operand in the next sequence of bytes
   OP_RETURN,
 } OpCode;
 
@@ -21,5 +22,7 @@ void initChunk(Chunk* chunk);
 void freeChunk(Chunk* chunk);
 void writeChunk(Chunk* chunk, uint8_t byte, int line);
 int addConstant(Chunk* chunk, Value value);
+// Writes instruction and constant to the chunk
+void writeConstant(Chunk* chunk, Value value, int line);
 
 #endif

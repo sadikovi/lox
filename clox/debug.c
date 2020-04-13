@@ -11,12 +11,28 @@ void disassembleChunk(Chunk* chunk, const char* name) {
   }
 }
 
-static int constantInstruction(const char* name, Chunk* chunk, int offset) {
-  uint8_t constant = chunk->code[offset + 1]; // get the next value after the opcode
+static int constantInstruction(const char* name, uint8_t instruction, Chunk* chunk, int offset) {
+  int constant; // index for a constant value
+  int newOffset; // offset to return
+
+  switch (instruction) {
+    case OP_CONSTANT_LONG:
+      constant =
+        (chunk->code[offset + 1]) +
+        (chunk->code[offset + 2] << 8) +
+        (chunk->code[offset + 3] << 16);
+      newOffset = offset + 4;
+      break;
+    default: // OP_CONSTANT
+      constant = chunk->code[offset + 1]; // get the next value after the opcode
+      newOffset = offset + 2;
+      break;
+  }
+
   printf("%-16s %4d '", name, constant);
   printValue(chunk->constants.values[constant]);
   printf("'\n");
-  return offset + 2;
+  return newOffset;
 }
 
 static int simpleInstruction(const char* name, int offset) {
@@ -35,7 +51,9 @@ int disassembleInstruction(Chunk* chunk, int offset) {
   uint8_t instruction = chunk->code[offset];
   switch (instruction) {
     case OP_CONSTANT:
-      return constantInstruction("OP_CONSTANT", chunk, offset);
+      return constantInstruction("OP_CONSTANT", instruction, chunk, offset);
+    case OP_CONSTANT_LONG:
+      return constantInstruction("OP_CONSTANT_LONG", instruction, chunk, offset);
     case OP_RETURN:
       return simpleInstruction("OP_RETURN", offset);
     default:
