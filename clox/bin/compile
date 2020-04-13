@@ -1,0 +1,17 @@
+#!/bin/bash
+
+bin="`dirname "$0"`"
+CLOX_DIR="`cd "$bin/../"; pwd`"
+
+cd $CLOX_DIR
+echo "[debug] working directory $(pwd)"
+
+echo "[debug] creating target"
+mkdir -p target
+
+echo "[debug] cleaning temporary directory"
+rm -f target/clox
+
+echo "[debug] compiling code"
+FILES=$(ls *.c)
+gcc -Wall $FILES -o target/clox
