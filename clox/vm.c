@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "common.h"
 #include "debug.h"
@@ -20,6 +21,10 @@ void freeVM() {
 }
 
 void push(Value value) {
+  if (vm.stackTop - vm.stack == STACK_MAX) {
+    printf("Stack overflow\n");
+    exit(-1);
+  }
   *vm.stackTop = value;
   vm.stackTop++;
 }
