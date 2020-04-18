@@ -7,7 +7,7 @@
 
 typedef enum {
   OP_CONSTANT, // stores 8-bit operand in the next byte
-  OP_CONSTANT_LONG, // stores 24-bit operand in the next sequence of bytes
+  OP_CONSTANT_LONG, // stores 32-bit operand in the next sequence of bytes
   OP_ADD,
   OP_SUBTRACT,
   OP_MULTIPLY,

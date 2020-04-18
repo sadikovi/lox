@@ -21,7 +21,8 @@ static int constantInstruction(const char* name, uint8_t instruction, Chunk* chu
       constant =
         (chunk->code[offset + 1]) +
         (chunk->code[offset + 2] << 8) +
-        (chunk->code[offset + 3] << 16);
+        (chunk->code[offset + 3] << 16) +
+        (chunk->code[offset + 3] << 24);
       newOffset = offset + 4;
       break;
     default: // OP_CONSTANT

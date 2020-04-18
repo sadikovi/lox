@@ -39,20 +39,21 @@ int addConstant(Chunk* chunk, Value value) {
 
 // Used for general constants.
 // Writes both instruction and it's operand.
-// Constant index is written either as 8-bit value or as 24-bit value.
+// Constant index is written either as 8-bit value or as 32-bit value.
 void writeConstant(Chunk* chunk, Value value, int line) {
   // write constant -> get index
   // write index as 3 bytes
   int constant = addConstant(chunk, value);
-  if (constant <= 255) {
+  if (constant <= UINT8_MAX) {
     // constant index fits within 1 byte
     writeChunk(chunk, OP_CONSTANT, line);
     writeChunk(chunk, constant, line);
   } else {
-    // we have to write constant index as 24-bit number
+    // we have to write constant index as 32-bit number
     writeChunk(chunk, OP_CONSTANT_LONG, line);
     writeChunk(chunk, constant & 0xff, line);
     writeChunk(chunk, (constant >> 8) & 0xff, line);
     writeChunk(chunk, (constant >> 16) & 0xff, line);
+    writeChunk(chunk, (constant >> 24) & 0xff, line);
   }
 }
