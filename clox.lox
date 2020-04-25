@@ -1,0 +1,7 @@
+var a = "abc";
+{
+  var b = a;
+  print b;
+}
+
+print a + "-def";
