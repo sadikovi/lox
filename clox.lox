@@ -67,3 +67,24 @@ class Oops {
 
 var oops = Oops();
 oops.field();
+
+
+class A {
+  method() {
+    print "A method";
+  }
+}
+
+class B < A {
+  method() {
+    print "B method";
+  }
+
+  test() {
+    super.method();
+  }
+}
+
+class C < B {}
+
+C().test();
